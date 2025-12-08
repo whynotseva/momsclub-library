@@ -7,47 +7,7 @@ import { usePresence } from '@/hooks/usePresence'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { QuoteOfDay, MobileNav, PushPromoModal, CategoryFilter, SubscriptionCard, MaterialCard, Header, FeaturedSection, WelcomeCard, SearchBar } from '@/components/library'
 import { ADMIN_IDS, DEFAULT_USER, LOYALTY_BADGES } from '@/lib/constants'
-
-// Тип уведомления
-interface Notification {
-  id: number
-  type: string
-  title: string
-  text: string
-  link?: string
-  is_read: boolean
-  created_at: string
-}
-
-
-// Тип материала
-interface Material {
-  id: number
-  title: string
-  description?: string
-  external_url?: string
-  category_id?: number  // Deprecated
-  category?: { name: string; slug: string; icon: string }  // Deprecated, первая категория
-  category_ids?: number[]  // Новое: массив ID категорий
-  categories?: { id: number; name: string; slug: string; icon: string }[]  // Новое: массив категорий
-  format?: string
-  cover_image?: string
-  is_published: boolean
-  is_featured: boolean
-  views: number
-  created_at: string
-  favorites_count?: number  // Количество лайков
-}
-
-// Тип категории
-interface Category {
-  id: number
-  name: string
-  slug: string
-  icon: string
-  description?: string
-  materials_count?: number
-}
+import { Notification, Material, Category } from '@/lib/types'
 
 export default function LibraryPage() {
   const router = useRouter()
