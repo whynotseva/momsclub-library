@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
 import { usePresence } from '@/hooks/usePresence'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
-import { QuoteOfDay, MobileNav, PushPromoModal, CategoryFilter, SubscriptionCard, MaterialCard, Header } from '@/components/library'
+import { QuoteOfDay, MobileNav, PushPromoModal, CategoryFilter, SubscriptionCard, MaterialCard, Header, FeaturedSection } from '@/components/library'
 
 // Список админов
 const ADMIN_IDS = [534740911, 44054166]
@@ -507,63 +507,28 @@ export default function LibraryPage() {
         {/* Цитата дня */}
         <QuoteOfDay />
 
-        {/* ⭐ Компактная секция "Выбор Полины" */}
-        {materials.filter(m => m.is_featured).length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-[#2D2A26] flex items-center gap-2 mb-3">
-              <span>⭐</span> Выбор Полины
-            </h3>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-              {materials.filter(m => m.is_featured).map((material) => (
-                <div 
-                  key={material.id}
-                  onClick={() => openMaterial(material)}
-                  className="flex-shrink-0 w-40 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3 border border-amber-200/50 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer"
-                >
-                  {material.cover_image ? (
-                    <img src={material.cover_image} alt={material.title} className="w-full h-20 object-cover rounded-lg mb-2" />
-                  ) : (
-                    <div className="w-full h-20 bg-gradient-to-br from-amber-200 to-amber-300 rounded-lg mb-2 flex items-center justify-center text-2xl">
-                      {material.categories?.[0]?.icon || material.category?.icon || '⭐'}
-                    </div>
-                  )}
-                  <h4 className="font-medium text-[#2D2A26] text-xs line-clamp-2 leading-tight">{material.title}</h4>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* ⭐ Выбор Полины */}
+        <FeaturedSection
+          title="Выбор Полины"
+          icon="⭐"
+          materials={materials.filter(m => m.is_featured)}
+          gradientFrom="from-amber-50"
+          gradientTo="to-orange-50"
+          borderColor="border-amber-200/50"
+          onMaterialClick={openMaterial}
+        />
 
-        {/* 🤖 Секция "Вам понравится" — AI рекомендации */}
-        {recommendations.materials.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-[#2D2A26] flex items-center gap-2 mb-3">
-              <span>✨</span> {recommendations.title}
-              {recommendations.type === 'personalized' && (
-                <span className="text-xs font-normal text-[#B08968] bg-[#F5E6D3] px-2 py-0.5 rounded-full">AI</span>
-              )}
-            </h3>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-              {recommendations.materials.map((material) => (
-                <div 
-                  key={material.id}
-                  onClick={() => openMaterial(material)}
-                  className="flex-shrink-0 w-40 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 border border-purple-200/50 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer"
-                >
-                  {material.cover_image ? (
-                    <img src={material.cover_image} alt={material.title} className="w-full h-20 object-cover rounded-lg mb-2" />
-                  ) : (
-                    <div className="w-full h-20 bg-gradient-to-br from-purple-200 to-pink-200 rounded-lg mb-2 flex items-center justify-center text-2xl">
-                      {(material as unknown as {icon?: string}).icon || material.categories?.[0]?.icon || material.category?.icon || '✨'}
-                    </div>
-                  )}
-                  <h4 className="font-medium text-[#2D2A26] text-xs line-clamp-2 leading-tight">{material.title}</h4>
-                  <p className="text-[10px] text-[#8B8279] mt-1">{(material as unknown as {category_name?: string}).category_name || material.categories?.[0]?.name || material.category?.name}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* ✨ Вам понравится — AI рекомендации */}
+        <FeaturedSection
+          title={recommendations.title}
+          icon="✨"
+          badge={recommendations.type === 'personalized' ? 'AI' : undefined}
+          materials={recommendations.materials}
+          gradientFrom="from-purple-50"
+          gradientTo="to-pink-50"
+          borderColor="border-purple-200/50"
+          onMaterialClick={openMaterial}
+        />
 
         {/* Фильтры категорий */}
         <CategoryFilter 
