@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
 import { usePresence } from '@/hooks/usePresence'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
-import { QuoteOfDay, MobileNav, PushPromoModal, CategoryFilter, SubscriptionCard, MaterialCard, Header, FeaturedSection, WelcomeCard } from '@/components/library'
+import { QuoteOfDay, MobileNav, PushPromoModal, CategoryFilter, SubscriptionCard, MaterialCard, Header, FeaturedSection, WelcomeCard, SearchBar } from '@/components/library'
 
 // Список админов
 const ADMIN_IDS = [534740911, 44054166]
@@ -500,41 +500,12 @@ export default function LibraryPage() {
         />
 
         {/* 🔍 Поиск + Прогресс */}
-        <div className="mb-6 grid lg:grid-cols-4 gap-4">
-          {/* Поиск */}
-          <div className="lg:col-span-3 relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="🔍 Поиск материалов..."
-              className="w-full px-5 py-3 lg:px-6 lg:py-4 rounded-xl lg:rounded-2xl bg-white/90 border border-[#E8D4BA]/40 focus:border-[#B08968] focus:outline-none focus:ring-2 focus:ring-[#B08968]/20 text-[#2D2A26] placeholder-[#A09890] shadow-lg shadow-[#C9A882]/5 transition-all"
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 text-[#8B8279] hover:text-[#B08968] text-lg"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-          
-          {/* Прогресс изучения — только десктоп */}
-          <div className="hidden lg:block bg-white/90 rounded-2xl p-4 border border-[#E8D4BA]/40 shadow-lg shadow-[#C9A882]/5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-[#8B8279]">📚 Изучено материалов</span>
-              <span className="text-xs font-bold text-[#B08968]">{user.totalMaterials > 0 ? Math.round((user.uniqueViewed / user.totalMaterials) * 100) : 0}%</span>
-            </div>
-            <div className="h-2 bg-[#F5E6D3] rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-[#B08968] to-[#C9A882] rounded-full transition-all duration-500"
-                style={{ width: `${user.totalMaterials > 0 ? Math.min((user.uniqueViewed / user.totalMaterials) * 100, 100) : 0}%` }}
-              ></div>
-            </div>
-            <div className="text-xs text-[#8B8279] mt-1">{user.uniqueViewed} из {user.totalMaterials || 0}</div>
-          </div>
-        </div>
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          uniqueViewed={user.uniqueViewed}
+          totalMaterials={user.totalMaterials}
+        />
         
         {/* Результаты поиска */}
         {searchQuery && (
