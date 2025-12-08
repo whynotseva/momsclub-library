@@ -42,10 +42,11 @@ from database.crud import (
     get_active_subscription,
     get_payment_by_id,
     create_payment_log,
-    send_badge_notification
+    send_badge_notification,
+    is_eligible_for_money_reward
 )
 from database.models import PaymentLog, User, Subscription
-from utils.constants import REFERRAL_BONUS_DAYS, CLUB_CHANNEL_URL, SUBSCRIPTION_DAYS
+from utils.constants import REFERRAL_BONUS_DAYS, CLUB_CHANNEL_URL, SUBSCRIPTION_DAYS, REFERRAL_MONEY_PERCENT
 from utils.helpers import escape_markdown_v2
 from utils.payment import verify_yookassa_signature
 from aiogram import Bot
@@ -290,13 +291,19 @@ async def process_successful_payment(session, payment_log_entry, yookassa_paymen
                 return SUBSCRIPTION_PRICE
         
         # Определяем цену для следующего автопродления
+        # ВАЖНО: Всегда используем ПОЛНУЮ цену тарифа, даже если текущий платёж был со скидкой первой оплаты (690₽)
         base_price = get_base_price_by_days(subscription_days)
+        
+        # Проверяем, была ли это первая оплата со скидкой (690₽)
+        from utils.constants import SUBSCRIPTION_PRICE_FIRST
+        is_first_payment_discount = payment_amount == SUBSCRIPTION_PRICE_FIRST  # 690₽
         
         # Проверяем, была ли применена разовая скидка промокода
         was_one_time_discount = user.one_time_discount_percent > 0 and applied_discount == user.one_time_discount_percent
         
         # Вычисляем renewal_price
-        if was_one_time_discount:
+        # При первой оплате со скидкой 690₽ — renewal_price всегда должен быть полной ценой (990₽)
+        if is_first_payment_discount or was_one_time_discount:
             # Была разовая скидка - renewal_price = базовая цена с постоянной скидкой (если есть)
             if user.lifetime_discount_percent > 0:
                 from loyalty.service import price_with_discount
@@ -387,32 +394,82 @@ async def process_successful_payment(session, payment_log_entry, yookassa_paymen
                 )
                 webhook_logger.info(f"Сохранен payment_method_id для пользователя {user.id}")
         
-        # Обработка реферального бонуса
+        # ============================================
+        # РЕФЕРАЛЬНАЯ СИСТЕМА 2.0
+        # При КАЖДОЙ оплате реферала рефереру приходит выбор: деньги или дни
+        # ============================================
         if user.referrer_id:
             referrer = await get_user_by_id(session, user.referrer_id)
             if referrer:
                 is_first_payment = await is_first_payment_by_user(session, user.id, payment_log_entry.id)
                 
-                if is_first_payment:
-                    payment_logger.info(f"Начисляем бонус {REFERRAL_BONUS_DAYS} дней рефереру {referrer.id}")
+                # --- СИСТЕМА 2.0: Отправляем выбор награды при КАЖДОЙ оплате ---
+                try:
+                    # Проверяем что у реферера есть активная подписка
+                    referrer_has_sub = await has_active_subscription(session, referrer.id)
                     
-                    success_bonus = await extend_subscription_days(
-                        session,
-                        referrer.id,
-                        REFERRAL_BONUS_DAYS,
-                        reason=f"referral_bonus_for_{user.id}"
-                    )
-                    
-                    if success_bonus:
-                        await send_referral_bonus_notification(
-                            bot,
-                            referrer.telegram_id,
-                            user.first_name or f"ID: {user.telegram_id}",
-                            REFERRAL_BONUS_DAYS
+                    if referrer_has_sub:
+                        # Рассчитываем денежный бонус
+                        loyalty_level = referrer.current_loyalty_level or 'none'
+                        bonus_percent = REFERRAL_MONEY_PERCENT.get(loyalty_level, 10)
+                        money_amount = int(payment_amount * bonus_percent / 100)
+                        
+                        # Проверяем право на денежную награду
+                        can_get_money = await is_eligible_for_money_reward(session, referrer.id)
+                        
+                        # Получаем имя реферала
+                        referee_name = user.first_name or f"ID: {user.telegram_id}"
+                        if user.username:
+                            referee_name = f"@{user.username}"
+                        
+                        # Формируем сообщение с выбором
+                        from utils.referral_helpers import get_loyalty_emoji
+                        loyalty_emoji = get_loyalty_emoji(loyalty_level)
+                        
+                        text = (
+                            f"🎁 <b>Отличные новости!</b>\n\n"
+                            f"Твой друг {referee_name} оплатил подписку! 🔄\n\n"
+                            f"💰 <b>Твоя награда:</b> {money_amount:,}₽ ({bonus_percent}% {loyalty_emoji})\n"
+                            f"✨ <i>Ты получаешь процент с КАЖДОЙ его оплаты!</i>\n\n"
+                            f"Выбери награду:"
                         )
-                        payment_logger.info(f"Реферальный бонус начислен рефереру {referrer.id}")
-
-                    # Начисляем бонус рефералу (приглашенному пользователю), если ранее не начисляли
+                        
+                        if not can_get_money:
+                            text += (
+                                "\n\n⚠️ <i>Денежные награды недоступны для администраторов "
+                                "и пользователей с бесконечной подпиской</i>"
+                            )
+                        
+                        # Кнопки выбора
+                        buttons = []
+                        if can_get_money:
+                            buttons.append([InlineKeyboardButton(
+                                text=f"💰 Деньги ({money_amount}₽)",
+                                callback_data=f"ref_reward_money:{user.id}:{payment_log_entry.id}"
+                            )])
+                        buttons.append([InlineKeyboardButton(
+                            text=f"📅 +{REFERRAL_BONUS_DAYS} дней к подписке",
+                            callback_data=f"ref_reward_days:{user.id}:{payment_log_entry.id}"
+                        )])
+                        
+                        keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+                        
+                        # Отправляем сообщение рефереру
+                        await bot.send_message(
+                            referrer.telegram_id,
+                            text,
+                            reply_markup=keyboard,
+                            parse_mode="HTML"
+                        )
+                        payment_logger.info(f"[Referral 2.0] Отправлен выбор награды рефереру {referrer.id} за оплату реферала {user.id}")
+                    else:
+                        payment_logger.info(f"[Referral 2.0] У реферера {referrer.id} нет активной подписки, выбор награды не отправлен")
+                        
+                except Exception as e_ref:
+                    payment_logger.error(f"[Referral 2.0] Ошибка отправки выбора награды: {e_ref}")
+                
+                # --- Бонус рефералу (приглашённому) при ПЕРВОЙ оплате ---
+                if is_first_payment:
                     ref_self_reason = f"referral_bonus_self_from_{referrer.id}"
                     exists_q = await session.execute(
                         select(PaymentLog).where(
@@ -440,11 +497,7 @@ async def process_successful_payment(session, payment_log_entry, yookassa_paymen
                                 REFERRAL_BONUS_DAYS
                             )
                             payment_logger.info(
-                                f"Реферальный бонус {REFERRAL_BONUS_DAYS} дней начислен рефералу (user_id={user.id}) от referrer_id={referrer.id}"
-                            )
-                        else:
-                            payment_logger.warning(
-                                f"Не удалось начислить реферальный бонус рефералу user_id={user.id}"
+                                f"[Referral 2.0] Бонус {REFERRAL_BONUS_DAYS} дней начислен рефералу (user_id={user.id})"
                             )
         
         # Уведомление админам
@@ -458,6 +511,36 @@ async def process_successful_payment(session, payment_log_entry, yookassa_paymen
         
         # Уведомление пользователю
         await send_payment_success_notification(user, subscription)
+        
+        # Проверяем бонус за автопродление (streak bonus)
+        try:
+            metadata = yookassa_payment_data.get('metadata', {}) if yookassa_payment_data else {}
+            is_auto_renewal = metadata.get('auto_renewal') == 'true'
+            
+            if is_auto_renewal and user.is_recurring_active:
+                from utils.autopay_bonus import process_autopay_streak_bonus, format_streak_bonus_message
+                
+                bonus_result = await process_autopay_streak_bonus(session, user, subscription)
+                
+                if bonus_result['bonus_days'] > 0:
+                    # Отправляем уведомление о бонусе
+                    bonus_message = format_streak_bonus_message(
+                        bonus_result['streak'],
+                        bonus_result['bonus_days'],
+                        bonus_result['next_bonus_days'],
+                        bonus_result['new_end_date']
+                    )
+                    await bot.send_message(
+                        chat_id=user.telegram_id,
+                        text=bonus_message,
+                        parse_mode="HTML"
+                    )
+                    payment_logger.info(
+                        f"🎁 Streak bonus отправлен user_id={user.id}: "
+                        f"streak={bonus_result['streak']}, +{bonus_result['bonus_days']} дней"
+                    )
+        except Exception as e:
+            payment_logger.error(f"Ошибка при обработке streak bonus: {e}", exc_info=True)
         
         # Проверяем и выдаем badges после успешной оплаты
         try:
@@ -474,6 +557,15 @@ async def process_successful_payment(session, payment_log_entry, yookassa_paymen
                         payment_logger.error(f"Ошибка при отправке уведомления о badge {badge_type}: {e}")
         except Exception as e:
             payment_logger.error(f"Ошибка при проверке badges для пользователя {user.id}: {e}")
+        
+        # Проверяем pending_loyalty_reward — если есть невыбранный бонус, отправляем выбор
+        try:
+            if user.pending_loyalty_reward and user.current_loyalty_level and user.current_loyalty_level != 'none':
+                from loyalty.service import send_choose_benefit_push
+                await send_choose_benefit_push(bot, session, user, user.current_loyalty_level)
+                payment_logger.info(f"Отправлен выбор бонуса лояльности для пользователя {user.id}")
+        except Exception as e:
+            payment_logger.error(f"Ошибка при отправке выбора бонуса лояльности: {e}")
         
         # Проверяем badges для реферера (если реферал сделал первую оплату)
         if user.referrer_id:
@@ -777,7 +869,8 @@ async def handle_payment_succeeded(payment):
                     'id': payment.payment_method.id if payment.payment_method and hasattr(payment.payment_method, 'id') else None,
                     'saved': payment.payment_method.saved if payment.payment_method and hasattr(payment.payment_method, 'saved') else False,
                     'type': payment.payment_method.type if payment.payment_method and hasattr(payment.payment_method, 'type') else None
-                } if payment.payment_method else {}
+                } if payment.payment_method else {},
+                'metadata': metadata  # Передаём metadata для проверки auto_renewal
             }
             
             success = await process_successful_payment(session, payment_log, payment_data_dict)

@@ -1585,8 +1585,8 @@ async def main():
     # Запускаем ночной крон для системы лояльности
     asyncio.create_task(loyalty_nightly_job())
     
-    # Миграционные уведомления включены (возврат на ЮКасy с бонусом 3 дня)
-    asyncio.create_task(send_migration_notifications())
+    # ОТКЛЮЧЕНО: Миграционные уведомления (возврат на ЮКасy) — больше не нужны
+    # asyncio.create_task(send_migration_notifications())
     
     # Запускаем задачу для отправки уведомлений об истекших подписках ("мы скучаем")
     asyncio.create_task(send_expired_subscription_reminders())

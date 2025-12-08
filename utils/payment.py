@@ -251,6 +251,22 @@ def create_autopayment(user_id: int,
             "auto_renewal": "true",
             "days": str(days)
         }
+        
+        # Чек для автоплатежа (обязателен для ЮКассы)
+        receipt_data = {
+            "customer": {
+                "email": f"user_{user_id}@momsclub.ru"  # Технический email
+            },
+            "items": [{
+                "description": description[:128],  # ЮКасса ограничивает до 128 символов
+                "quantity": "1",
+                "amount": {
+                    "value": f"{amount}.00",
+                    "currency": "RUB"
+                },
+                "vat_code": 1  # НДС не облагается
+            }]
+        }
 
         # Создаем автоплатеж
         payment = Payment.create({
@@ -261,7 +277,8 @@ def create_autopayment(user_id: int,
             "capture": True,
             "payment_method_id": payment_method_id,
             "description": description,
-            "metadata": metadata
+            "metadata": metadata,
+            "receipt": receipt_data
         }, payment_id)
 
         logger.info(f"✅ Автоплатеж создан: ID={payment.id}, статус={payment.status}")

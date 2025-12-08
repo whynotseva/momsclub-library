@@ -77,6 +77,10 @@ async def show_autorenew_menu(callback: CallbackQuery):
                 callback_data="admin_autorenew_disabled:0"
             )],
             [InlineKeyboardButton(
+                text="📈 Прогноз Cash In",
+                callback_data="admin_cashin_forecast"
+            )],
+            [InlineKeyboardButton(
                 text="« Назад",
                 callback_data="admin_back"
             )]
@@ -559,6 +563,144 @@ async def toggle_renew_favorite(callback: CallbackQuery):
     except Exception as e:
         logger.error(f"Ошибка в toggle_renew_favorite: {e}", exc_info=True)
         await callback.answer("❌ Ошибка", show_alert=True)
+
+
+@autorenew_router.callback_query(F.data == "admin_cashin_forecast")
+async def show_cashin_forecast(callback: CallbackQuery):
+    """Показывает прогноз Cash In по автопродлениям"""
+    async with AsyncSessionLocal() as session:
+        user = await get_user_by_telegram_id(session, callback.from_user.id)
+        if not is_admin(user) or not can_manage_admins(user):
+            await callback.answer("У вас нет доступа к этой функции", show_alert=True)
+            return
+    
+    try:
+        from datetime import timedelta
+        from calendar import monthrange
+        
+        async with AsyncSessionLocal() as session:
+            now = datetime.now()
+            
+            # Названия месяцев
+            months_ru = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                        'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+            
+            # Границы текущего месяца (остаток)
+            current_month_end = datetime(now.year, now.month, monthrange(now.year, now.month)[1], 23, 59, 59)
+            
+            # Следующий месяц
+            if now.month == 12:
+                next_month_start = datetime(now.year + 1, 1, 1)
+                next_month_end = datetime(now.year + 1, 1, 31, 23, 59, 59)
+                next_month_num = 1
+            else:
+                next_month_start = datetime(now.year, now.month + 1, 1)
+                next_month_end = datetime(now.year, now.month + 1, monthrange(now.year, now.month + 1)[1], 23, 59, 59)
+                next_month_num = now.month + 1
+            
+            # 1. Получаем ВСЕХ пользователей с автопродлением и их цены
+            query_auto = (
+                select(User, Subscription)
+                .join(Subscription, User.id == Subscription.user_id)
+                .where(
+                    User.is_recurring_active == True,
+                    User.yookassa_payment_method_id.isnot(None),
+                    Subscription.is_active == True,
+                    Subscription.end_date < LIFETIME_THRESHOLD
+                )
+            )
+            result_auto = await session.execute(query_auto)
+            auto_users = result_auto.all()
+            
+            # Считаем recurring сумму (средняя цена продления)
+            total_auto_count = len(auto_users)
+            total_auto_monthly_sum = sum(sub.renewal_price if sub.renewal_price else 990 for usr, sub in auto_users)
+            
+            # 2. Считаем кто истекает в текущем месяце (для точного прогноза декабря)
+            curr_auto_count = 0
+            curr_auto_sum = 0
+            curr_manual_count = 0
+            curr_manual_sum = 0
+            
+            query_curr = (
+                select(User, Subscription)
+                .join(Subscription, User.id == Subscription.user_id)
+                .where(
+                    Subscription.is_active == True,
+                    Subscription.end_date >= now,
+                    Subscription.end_date <= current_month_end,
+                    Subscription.end_date < LIFETIME_THRESHOLD
+                )
+            )
+            result_curr = await session.execute(query_curr)
+            for usr, sub in result_curr.all():
+                price = sub.renewal_price if sub.renewal_price else 990
+                if usr.is_recurring_active and usr.yookassa_payment_method_id:
+                    curr_auto_count += 1
+                    curr_auto_sum += price
+                else:
+                    curr_manual_count += 1
+                    curr_manual_sum += price
+            
+            # 3. Без автопродления (для 50/50 оценки)
+            query_manual = (
+                select(User, Subscription)
+                .join(Subscription, User.id == Subscription.user_id)
+                .where(
+                    (User.is_recurring_active == False) | (User.yookassa_payment_method_id.is_(None)),
+                    Subscription.is_active == True,
+                    Subscription.end_date < LIFETIME_THRESHOLD
+                )
+            )
+            result_manual = await session.execute(query_manual)
+            manual_users = result_manual.all()
+            total_manual_count = len(manual_users)
+            total_manual_sum = sum(sub.renewal_price if sub.renewal_price else 990 for usr, sub in manual_users)
+            
+            # Формируем текст
+            text = "📈 <b>Прогноз Cash In</b>\n\n"
+            
+            # Recurring доход (ежемесячный)
+            text += "� <b>Recurring (ежемесячный)</b>\n"
+            text += f"├ Всего с автопродлением: <b>{total_auto_count} чел.</b>\n"
+            text += f"└ 💰 Ежемесячно: <b>~{total_auto_monthly_sum:,}₽</b>\n\n".replace(',', ' ')
+            
+            # Текущий месяц (точный прогноз)
+            curr_month_name = months_ru[now.month]
+            text += f"📅 <b>{curr_month_name} (остаток)</b>\n"
+            text += f"├ ✅ Авто: {curr_auto_count} чел. → <b>{curr_auto_sum:,}₽</b>\n".replace(',', ' ')
+            text += f"├ ❓ Ручные: {curr_manual_count} чел. → ~{curr_manual_sum // 2:,}₽ (50%)\n".replace(',', ' ')
+            text += f"└ 💰 <b>Итого: ~{curr_auto_sum + curr_manual_sum // 2:,}₽</b>\n\n".replace(',', ' ')
+            
+            # Следующий месяц (все с автопродлением заплатят)
+            next_month_name = months_ru[next_month_num]
+            text += f"📅 <b>{next_month_name}</b>\n"
+            text += f"├ ✅ Авто: {total_auto_count} чел. → <b>~{total_auto_monthly_sum:,}₽</b>\n".replace(',', ' ')
+            text += f"└ <i>(все с автопродлением заплатят)</i>\n\n"
+            
+            # Итого
+            text += f"━━━━━━━━━━━━━━━━\n"
+            text += f"📊 <b>Сводка:</b>\n"
+            text += f"├ 🔄 Recurring/мес: <b>{total_auto_monthly_sum:,}₽</b>\n".replace(',', ' ')
+            text += f"├ ❓ Без авто (50%): <b>~{total_manual_sum // 2:,}₽</b>\n".replace(',', ' ')
+            text += f"└ 💰 Прогноз/мес: <b>~{total_auto_monthly_sum + total_manual_sum // 2:,}₽</b>\n\n".replace(',', ' ')
+            
+            text += f"<i>❓ {total_manual_count} чел. без автопродления</i>"
+        
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔄 Обновить", callback_data="admin_cashin_forecast")],
+            [InlineKeyboardButton(text="« Назад", callback_data="admin_autorenew_menu")]
+        ])
+        
+        try:
+            await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+        except Exception:
+            pass  # Игнорируем "message is not modified"
+        await callback.answer("✅ Данные актуальны")
+        
+    except Exception as e:
+        logger.error(f"Ошибка в show_cashin_forecast: {e}", exc_info=True)
+        await callback.answer("❌ Ошибка при расчете прогноза", show_alert=True)
 
 
 def register_autorenew_handlers(dp):

@@ -195,6 +195,22 @@ async def create_subscription(db: AsyncSession,
         # Возможно, стоит обновить существующую, если параметры новой более выгодны или актуальны.
         return existing_active_sub
 
+    # ВАЖНО: Деактивируем все старые подписки пользователя перед созданием новой
+    # Это предотвращает дублирование и повторные списания при автопродлении
+    deactivate_query = (
+        update(Subscription)
+        .where(
+            and_(
+                Subscription.user_id == user_id,
+                Subscription.is_active == True
+            )
+        )
+        .values(is_active=False)
+    )
+    result = await db.execute(deactivate_query)
+    if result.rowcount > 0:
+        logger.info(f"Деактивировано {result.rowcount} старых подписок для user_id={user_id} перед созданием новой")
+
     subscription = Subscription(
         user_id=user_id,
         end_date=end_date,
@@ -341,7 +357,8 @@ async def create_payment_log(db: AsyncSession, user_id: int, amount: int, status
                             subscription_id: int = None, payment_method: str = None, 
                             transaction_id: str = None, details: str = None, 
                             payment_label: str = None, days: Optional[int] = None,
-                            payment_datetime: Optional[datetime] = None):
+                            payment_datetime: Optional[datetime] = None,
+                            admin_id: Optional[int] = None):
     """
     Создает запись о платеже в логе с дополнительной меткой платежа и количеством дней.
     
@@ -375,7 +392,8 @@ async def create_payment_log(db: AsyncSession, user_id: int, amount: int, status
             details=details,
             payment_label=payment_label,
             days=days,
-            created_at=payment_datetime
+            created_at=payment_datetime,
+            admin_id=admin_id
         )
     else:
         # Используем текущее время (по умолчанию)
@@ -388,7 +406,8 @@ async def create_payment_log(db: AsyncSession, user_id: int, amount: int, status
             transaction_id=transaction_id,
             details=details,
             payment_label=payment_label,
-            days=days
+            days=days,
+            admin_id=admin_id
         )
     
     db.add(payment_log)
@@ -2495,17 +2514,22 @@ async def disable_user_auto_renewal(db: AsyncSession, user_id: int) -> bool:
         logger.warning(f"Попытка отключить автопродление для несуществующего пользователя ID {user_id}")
         return False
 
+    # Сохраняем старый streak для логирования
+    old_streak = user.autopay_streak or 0
+    
     # Отключаем автопродление на уровне пользователя (НЕ удаляем yookassa_payment_method_id!)
+    # Также сбрасываем streak бонусов
     user_update_query = (
         update(User)
         .where(User.id == user_id)
         .values(
-            is_recurring_active=False
+            is_recurring_active=False,
+            autopay_streak=0  # Сбрасываем streak при отключении
             # yookassa_payment_method_id НЕ удаляем - оставляем для возможности повторного включения
         )
     )
     await db.execute(user_update_query)
-    logger.info(f"Автопродление отключено для пользователя ID {user_id}. is_recurring_active=False (yookassa_payment_method_id сохранен).")
+    logger.info(f"Автопродление отключено для пользователя ID {user_id}. is_recurring_active=False, streak: {old_streak}→0 (yookassa_payment_method_id сохранен).")
 
     # Сбрасываем параметры попыток автопродления для его активной подписки (если есть)
     active_sub = await get_active_subscription(db, user_id)

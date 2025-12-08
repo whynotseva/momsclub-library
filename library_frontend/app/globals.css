@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#FDFCFA] text-gray-900;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Кастомные стили */
+.gradient-primary {
+  background: linear-gradient(135deg, #EC4899 0%, #F472B6 100%);
+}
+
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+}
+
+.btn-primary {
+  @apply bg-primary hover:bg-primary-600 text-white font-medium px-6 py-3 rounded-xl transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium px-6 py-3 rounded-xl transition-colors;
+}
+
+/* TipTap Editor Styles */
+.ProseMirror {
+  min-height: 200px;
+  outline: none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #8B8279;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.ProseMirror h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #5D4E3A;
+  margin: 1rem 0 0.5rem;
+}
+
+.ProseMirror h2 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: #5D4E3A;
+  margin: 0.875rem 0 0.5rem;
+}
+
+.ProseMirror h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #5D4E3A;
+  margin: 0.75rem 0 0.375rem;
+}
+
+.ProseMirror p {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+  color: #5D4E3A;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.ProseMirror li {
+  margin: 0.25rem 0;
+}
+
+.ProseMirror ul > li {
+  list-style-type: disc;
+}
+
+.ProseMirror ol > li {
+  list-style-type: decimal;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid #B08968;
+  padding-left: 1rem;
+  margin: 0.75rem 0;
+  color: #8B8279;
+  font-style: italic;
+}
+
+.ProseMirror pre {
+  background: #F5E6D3;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-family: monospace;
+  font-size: 0.875rem;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+.ProseMirror code {
+  background: #F5E6D3;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  font-size: 0.875rem;
+}
+
+.ProseMirror a {
+  color: #B08968;
+  text-decoration: underline;
+}
+
+.ProseMirror a:hover {
+  color: #8B6914;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  border-radius: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.ProseMirror hr {
+  border: none;
+  border-top: 1px solid #E8D4BA;
+  margin: 1rem 0;
+}
+
+/* Task List (чеклисты как в Notion) */
+.ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid #B08968;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  accent-color: #B08968;
+}
+
+.ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+.ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
+  text-decoration: line-through;
+  color: #8B8279;
+}
+
+/* Highlight colors */
+.ProseMirror mark {
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+}
+
+/* Зимние эффекты отключены */
+
+/* Плавная анимация появления материалов */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Анимация для кнопок */
+@keyframes fadeInButton {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInButton {
+  animation: fadeInButton 0.4s ease-out forwards;
+}
+
+/* Скрытие скроллбара для горизонтального скролла */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+
+
+/* Цвет overscroll для iOS */
+html, body {
+  background-color: #FDFCFA !important;
+}

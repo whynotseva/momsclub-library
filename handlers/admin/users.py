@@ -1039,6 +1039,7 @@ async def process_end_date_input(message: types.Message, state: FSMContext):
 
 async def grant_subscription(message, telegram_id, days, is_lifetime=False, end_date=None):
     bot = message.bot
+    admin_telegram_id = message.from_user.id  # ID админа который выдаёт подписку
 
     if is_lifetime:
         details = "Бессрочная подписка, выдана администратором"
@@ -1060,6 +1061,10 @@ async def grant_subscription(message, telegram_id, days, is_lifetime=False, end_
             if not user:
                 await message.answer(f"❌ Пользователь с ID {telegram_id} не найден", reply_markup=keyboard)
                 return False
+            
+            # Получаем ID админа в БД
+            admin_user = await get_user_by_telegram_id(session, admin_telegram_id)
+            admin_db_id = admin_user.id if admin_user else None
             
             # Сохраняем данные пользователя для использования после commit
             user_telegram_id = user.telegram_id
@@ -1103,6 +1108,7 @@ async def grant_subscription(message, telegram_id, days, is_lifetime=False, end_
                     payment_method="admin",
                     transaction_id=None,
                     details=details,
+                    admin_id=admin_db_id,  # Логируем кто выдал
                 )
 
                 days_text = "бессрочно" if is_lifetime else f"до {new_sub_end_date.strftime('%d.%m.%Y')}"
@@ -1139,6 +1145,7 @@ async def grant_subscription(message, telegram_id, days, is_lifetime=False, end_
                     payment_method="admin",
                     transaction_id=None,
                     details=details,
+                    admin_id=admin_db_id,  # Логируем кто выдал
                 )
 
                 days_text = "бессрочно" if is_lifetime else f"до {new_sub_end_date.strftime('%d.%m.%Y')}"

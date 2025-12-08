@@ -22,6 +22,7 @@ class User(Base):
     birthday_gift_year = Column(Integer, nullable=True)  # Год, в котором был выдан подарок на ДР
     yookassa_payment_method_id = Column(String(255), nullable=True)  # ID платежного метода для автоплатежей (ЮКасса)
     is_recurring_active = Column(Boolean, default=False)  # Флаг активности автопродления (по умолчанию выключено)
+    autopay_streak = Column(Integer, default=0)  # Счётчик успешных автопродлений подряд (для бонусов)
     phone = Column(String(32), nullable=True)  # Телефон пользователя
     email = Column(String(255), nullable=True)  # Email пользователя
     reminder_sent = Column(Boolean, default=False)  # Флаг, что напоминание об оплате было отправлено
@@ -106,6 +107,7 @@ class PaymentLog(Base):
     days = Column(Integer, nullable=True) # Кол-во дней подписки, связанной с этим платежом
     created_at = Column(DateTime, server_default=func.now())
     is_confirmed = Column(Boolean, default=False)  # Флаг подтверждения платежа
+    admin_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)  # ID админа, если подписка выдана вручную
     
     def __repr__(self):
         return f"<PaymentLog {self.id} for user {self.user_id}>"

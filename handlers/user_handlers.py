@@ -149,13 +149,18 @@ async def cmd_start(message: types.Message, state: FSMContext):
         # Если возникла ошибка, пропускаем логирование
         pass
     
-    # Извлекаем реферальный код из аргументов, если он есть
+    # Извлекаем аргументы из команды /start
     ref_code = None
+    show_payment_menu = False
     args = message.text.split()
     if len(args) > 1:
         arg = args[1]
-        # Проверяем, начинается ли аргумент с префикса "ref_"
-        if arg.startswith("ref_"):
+        # Проверяем специальные команды
+        if arg == "renew" or arg == "subscribe":
+            # Deep link для продления/оформления подписки из библиотеки
+            show_payment_menu = True
+            logger.info(f"Получен deep link для оплаты: {arg}")
+        elif arg.startswith("ref_"):
             # Извлекаем сам код, убирая префикс "ref_"
             ref_code = arg[4:]
             logger.info(f"Получен реферальный код: {ref_code}")
@@ -225,6 +230,55 @@ async def cmd_start(message: types.Message, state: FSMContext):
     async with AsyncSessionLocal() as session:
         has_subscription = await has_active_subscription(session, user_id)
         user = await get_user_by_telegram_id(session, user_id)
+
+    # Если deep link для оплаты — сразу показываем меню тарифов
+    if show_payment_menu:
+        # Проверяем, есть ли активная подписка и право на бонус
+        async with AsyncSessionLocal() as session:
+            subscription = await get_active_subscription(session, user_id)
+            bonus_text = ""
+            if subscription:
+                from datetime import datetime
+                days_left = (subscription.end_date - datetime.now()).days
+                if days_left >= 7:
+                    bonus_text = f"\n\n🎁 <b>Акция!</b> Продли сейчас и получи <b>+3 дня бонусом</b>!\nОсталось {days_left} дней — успей воспользоваться 💫"
+        
+        tariff_text = f"""<b>💳 Продление подписки Mom's Club</b>
+
+Выбери удобный тариф:{bonus_text}
+
+<b>Что тебя ждёт:</b>
+• доступ к закрытому каналу
+• вирусные подборки Reels и постов
+• фишки и лайфхаки по блогингу
+• готовые идеи для съёмок
+• тренды и примеры для мамского блога
+• подкасты и разборы
+• комьюнити из потрясающих мам
+
+<b>Нажми на тариф для оплаты:</b>"""
+
+        # Используем extend_ callbacks если есть подписка (чтобы дни суммировались)
+        if subscription:
+            keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text=f"📦 1 месяц — {SUBSCRIPTION_PRICE} ₽", callback_data="payment_extend_1month")],
+                    [InlineKeyboardButton(text=f"📦 2 месяца — {SUBSCRIPTION_PRICE_2MONTHS} ₽ 💰", callback_data="payment_extend_2months")],
+                    [InlineKeyboardButton(text=f"📦 3 месяца — {SUBSCRIPTION_PRICE_3MONTHS} ₽ 💰", callback_data="payment_extend_3months")],
+                    [InlineKeyboardButton(text="🎁 У меня есть промокод", callback_data="promo_code")],
+                ]
+            )
+        else:
+            keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text=f"1 месяц — {SUBSCRIPTION_PRICE} ₽", callback_data="payment_1month")],
+                    [InlineKeyboardButton(text=f"2 месяца — {SUBSCRIPTION_PRICE_2MONTHS} ₽", callback_data="payment_2months")],
+                    [InlineKeyboardButton(text=f"3 месяца — {SUBSCRIPTION_PRICE_3MONTHS} ₽", callback_data="payment_3months")],
+                    [InlineKeyboardButton(text="🎁 У меня есть промокод", callback_data="promo_code")],
+                ]
+            )
+        await message.answer(tariff_text, reply_markup=keyboard, parse_mode="HTML")
+        return
 
     # Если нет активной подписки, показываем приветственное сообщение и кнопку для оплаты
     if not has_subscription:
@@ -3845,7 +3899,36 @@ async def process_request_cancel_autorenewal(callback: types.CallbackQuery):
             await process_manage_subscription(callback)
             return
 
-        # Показываем выбор причины отмены
+        # Проверяем streak — если есть, показываем предупреждение
+        streak = user.autopay_streak or 0
+        if streak > 0:
+            from utils.autopay_bonus import get_next_streak_bonus_days, format_streak_warning_message
+            next_bonus = get_next_streak_bonus_days(streak)
+            
+            warning_text = format_streak_warning_message(streak, next_bonus)
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="❌ Всё равно отключить", callback_data="confirm_cancel_autorenewal")],
+                [InlineKeyboardButton(text="💕 Оставить автопродление", callback_data="manage_subscription")]
+            ])
+            
+            try:
+                await callback.message.edit_text(
+                    warning_text,
+                    parse_mode="HTML",
+                    reply_markup=keyboard
+                )
+            except:
+                await callback.message.answer(
+                    warning_text,
+                    parse_mode="HTML",
+                    reply_markup=keyboard
+                )
+            
+            await callback.answer()
+            return
+
+        # Показываем выбор причины отмены (если нет streak)
         text = (
             "🤔 <b>Почему вы хотите отменить автопродление?</b>\n\n"
             "Пожалуйста, выберите причину, это поможет нам стать лучше 💖"
@@ -3875,6 +3958,44 @@ async def process_request_cancel_autorenewal(callback: types.CallbackQuery):
             )
         
         await callback.answer()
+
+
+# Обработчик подтверждения отмены после предупреждения о streak
+@user_router.callback_query(F.data == "confirm_cancel_autorenewal")
+async def process_confirm_cancel_autorenewal(callback: types.CallbackQuery):
+    """Показывает причины отмены после подтверждения потери streak"""
+    logger.info(f"[CONFIRM_CANCEL_RENEWAL] User {callback.from_user.id} confirmed streak loss.")
+    
+    # Показываем выбор причины отмены
+    text = (
+        "🤔 <b>Почему вы хотите отменить автопродление?</b>\n\n"
+        "Пожалуйста, выберите причину, это поможет нам стать лучше 💖"
+    )
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="💸 Дорого", callback_data="cancel_reason_expensive")],
+        [InlineKeyboardButton(text="📉 Не использую контент", callback_data="cancel_reason_no_use")],
+        [InlineKeyboardButton(text="⏸ Временная пауза", callback_data="cancel_reason_pause")],
+        [InlineKeyboardButton(text="😞 Не оправдал ожидания", callback_data="cancel_reason_expectations")],
+        [InlineKeyboardButton(text="🔄 Технические проблемы", callback_data="cancel_reason_technical")],
+        [InlineKeyboardButton(text="💭 Другая причина", callback_data="cancel_reason_other")],
+        [InlineKeyboardButton(text="« Назад", callback_data="manage_subscription")]
+    ])
+    
+    try:
+        await callback.message.edit_text(
+            text,
+            parse_mode="HTML",
+            reply_markup=keyboard
+        )
+    except:
+        await callback.message.answer(
+            text,
+            parse_mode="HTML",
+            reply_markup=keyboard
+        )
+    
+    await callback.answer()
 
 
 # Обработчики выбора причины отмены
@@ -4721,6 +4842,23 @@ async def process_loyalty_benefit_choice(callback: types.CallbackQuery):
             valid_levels = ['silver', 'gold', 'platinum']
             valid_codes = ['days_7', 'days_14', 'days_30_gift', 'discount_5', 'discount_10', 'discount_15_forever']
             
+            # ПРОВЕРКА: Если выбран бонус с днями — нужна активная подписка
+            if code in ['days_7', 'days_14', 'days_30_gift']:
+                has_sub = await has_active_subscription(session, user.id)
+                if not has_sub:
+                    # Показываем сообщение с кнопкой оплаты
+                    no_sub_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text="💳 Оплатить подписку", callback_data="payment_1month")],
+                    ])
+                    await callback.message.edit_text(
+                        "💕 Красотка, для получения бонусных дней нужна активная подписка\\!\n\n"
+                        "Оплати — и подарок сразу твой ✨",
+                        reply_markup=no_sub_keyboard,
+                        parse_mode="MarkdownV2"
+                    )
+                    await callback.answer()
+                    return
+            
             if level not in valid_levels:
                 await callback.answer("Неверный уровень лояльности", show_alert=True)
                 return
@@ -5094,7 +5232,7 @@ async def process_referral_reward_money(callback: types.CallbackQuery):
             # НЕКРИТИЧЕСКАЯ ПРОБЛЕМА #2: Проверяем активную подписку реферера
             from database.crud import has_active_subscription
             if not await has_active_subscription(session, referrer.id):
-                await callback.answer("❌ У вас нет активной подписки. Награды доступны только участникам клуба.", show_alert=True)
+                await callback.answer("💕 Красотка, для получения награды нужна активная подписка! Оплати — и бонус твой ✨", show_alert=True)
                 return
             
             # КРИТИЧЕСКАЯ ПРОБЛЕМА #1: Получаем КОНКРЕТНЫЙ платеж по payment_id
@@ -5175,7 +5313,7 @@ async def process_referral_reward_days(callback: types.CallbackQuery):
             # НЕКРИТИЧЕСКАЯ ПРОБЛЕМА #2: Проверяем активную подписку реферера
             from database.crud import has_active_subscription
             if not await has_active_subscription(session, referrer.id):
-                await callback.answer("❌ У вас нет активной подписки. Награды доступны только участникам клуба.", show_alert=True)
+                await callback.answer("💕 Красотка, для получения награды нужна активная подписка! Оплати — и бонус твой ✨", show_alert=True)
                 return
             
             # КРИТИЧЕСКАЯ ПРОБЛЕМА #1: Получаем КОНКРЕТНЫЙ платеж по payment_id

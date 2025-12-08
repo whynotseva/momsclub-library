@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { api } from '@/lib/api'
 import { usePresence } from '@/hooks/usePresence'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
-import { QuoteOfDay } from '@/components/library'
+import { QuoteOfDay, MobileNav, PushPromoModal } from '@/components/library'
 
 // Список админов
 const ADMIN_IDS = [534740911, 44054166]
@@ -1028,77 +1028,17 @@ export default function LibraryPage() {
       </main>
 
       {/* Push Promo Modal */}
-      {showPushPromo && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-300">
-            <div className="text-center">
-              <div className="mb-4 flex justify-center">
-                <svg className="w-16 h-16 text-[#B08968]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-[#2D2A26] mb-2">
-                Не пропусти новинки!
-              </h3>
-              <p className="text-[#8B8279] mb-6">
-                Включи уведомления, чтобы узнавать о новых материалах, идеях для Reels и полезных гайдах первой!
-              </p>
-              <div className="space-y-3">
-                <button
-                  onClick={async () => {
-                    setShowPushPromo(false)
-                    const success = await togglePush()
-                    if (success) {
-                      alert('🎉 Уведомления включены!')
-                    }
-                  }}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-[#B08968] to-[#A67C52] text-white font-semibold rounded-xl hover:shadow-lg transition-all"
-                >
-                  ✨ Включить уведомления
-                </button>
-                <button
-                  onClick={() => {
-                    setShowPushPromo(false)
-                    localStorage.setItem('push_promo_dismissed', 'true')
-                  }}
-                  className="w-full py-2 text-[#8B8279] text-sm hover:text-[#2D2A26] transition-colors"
-                >
-                  Позже
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <PushPromoModal 
+        isOpen={showPushPromo} 
+        onEnable={async () => {
+          setShowPushPromo(false)
+          return await togglePush()
+        }}
+        onDismiss={() => setShowPushPromo(false)}
+      />
 
-      {/* Mobile Navigation - Floating Glass с плавной анимацией */}
-      <nav className={`md:hidden fixed bottom-6 left-4 right-4 z-50 transition-all duration-300 ease-in-out ${showMobileNav ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'}`}>
-        <div className="flex items-center justify-around rounded-2xl px-2 py-3 shadow-2xl border border-white/50" style={{ background: 'rgba(255,255,255,0.45)', backdropFilter: 'blur(24px) saturate(180%)' }}>
-          {isPWA && (
-            <button 
-              onClick={() => window.location.reload()} 
-              className="p-2.5 rounded-xl text-[#B08968] hover:bg-[#F5E6D3] transition-colors"
-              title="Обновить"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                <path d="M3 3v5h5"/>
-                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
-                <path d="M21 21v-5h-5"/>
-              </svg>
-            </button>
-          )}
-          <a href="/library" className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#B08968] text-white shadow-md">
-            Библиотека
-          </a>
-          <a href="/favorites" className="px-4 py-2 rounded-xl text-sm font-medium text-[#8B8279]">
-            Избранное
-          </a>
-          <a href="/history" className="px-4 py-2 rounded-xl text-sm font-medium text-[#8B8279]">
-            История
-          </a>
-        </div>
-      </nav>
+      {/* Mobile Navigation */}
+      <MobileNav activePage="library" isPWA={isPWA} isVisible={showMobileNav} />
     </div>
   )
 }

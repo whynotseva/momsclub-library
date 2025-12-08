@@ -2,7 +2,7 @@
 
 interface PushPromoModalProps {
   isOpen: boolean
-  onEnable: () => Promise<void>
+  onEnable: () => Promise<boolean>
   onDismiss: () => void
 }
 
@@ -13,7 +13,10 @@ export function PushPromoModal({ isOpen, onEnable, onDismiss }: PushPromoModalPr
   if (!isOpen) return null
 
   const handleEnable = async () => {
-    await onEnable()
+    const success = await onEnable()
+    if (success) {
+      alert('🎉 Уведомления включены!')
+    }
   }
 
   const handleDismiss = () => {

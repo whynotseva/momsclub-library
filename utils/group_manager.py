@@ -7,6 +7,7 @@ from database.config import AsyncSessionLocal
 from database.crud import get_all_expired_subscriptions, get_expiring_soon_subscriptions, get_user_by_id, deactivate_subscription, get_user_by_telegram_id, has_active_subscription, has_welcome_sent, mark_welcome_sent, create_subscription_notification
 from database.models import User
 from utils.constants import CLUB_GROUP_ID, NOTIFICATION_DAYS_BEFORE, NOTIFICATION_DAYS_BEFORE_EARLY, CLUB_CHANNEL_URL, SUBSCRIPTION_PRICE, CLUB_GROUP_TOPIC_ID, SUBSCRIPTION_DAYS, SUBSCRIPTION_PRICE_2MONTHS, SUBSCRIPTION_PRICE_3MONTHS, ADMIN_IDS
+from utils.payment import create_autopayment
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Настройка логирования
@@ -79,6 +80,74 @@ class GroupManager:
                     
                     logger.debug(f"Найден пользователь: TG_ID={user.telegram_id}, DB_ID={user.id}")
 
+                    # === АВТОПРОДЛЕНИЕ ===
+                    # Если у пользователя включено автопродление и есть payment_method_id, пытаемся списать
+                    if user.is_recurring_active and user.yookassa_payment_method_id:
+                        logger.info(f"🔄 Попытка автопродления для пользователя {user.telegram_id}")
+                        try:
+                            # Определяем тариф по прошлой подписке
+                            # sub.days содержит количество дней прошлой подписки
+                            renewal_days = getattr(sub, 'days', None) or SUBSCRIPTION_DAYS  # По умолчанию 30
+                            
+                            # Определяем цену по количеству дней
+                            if renewal_days >= 90:
+                                renewal_amount = SUBSCRIPTION_PRICE_3MONTHS  # 2490₽
+                                renewal_days = 90
+                            elif renewal_days >= 60:
+                                renewal_amount = SUBSCRIPTION_PRICE_2MONTHS  # 1790₽
+                                renewal_days = 60
+                            else:
+                                renewal_amount = SUBSCRIPTION_PRICE  # 990₽
+                                renewal_days = 30
+                            
+                            logger.info(f"   Тариф: {renewal_days} дней, {renewal_amount}₽")
+                            
+                            # Пытаемся создать автоплатёж
+                            status, payment_id = create_autopayment(
+                                user_id=user.telegram_id,
+                                amount=renewal_amount,
+                                description=f"Автопродление подписки Mom's Club на {renewal_days} дней ({user.username or user.first_name})",
+                                payment_method_id=user.yookassa_payment_method_id,
+                                days=renewal_days
+                            )
+                            
+                            if status == "success":
+                                logger.info(f"✅ Автопродление успешно для {user.telegram_id}! Payment ID: {payment_id}")
+                                # ВАЖНО: Деактивируем старую подписку чтобы не списать повторно!
+                                sub.is_active = False
+                                sub.autopayment_fail_count = 0
+                                sub.next_retry_attempt_at = None
+                                session.add(sub)
+                                await session.commit()  # Коммитим сразу!
+                                # Подписка будет продлена через webhook, пропускаем исключение
+                                continue
+                            elif status == "pending":
+                                logger.info(f"⏳ Автопродление в обработке для {user.telegram_id}. Payment ID: {payment_id}")
+                                # ВАЖНО: Деактивируем старую подписку чтобы не списать повторно!
+                                sub.is_active = False
+                                sub.autopayment_fail_count = 0
+                                sub.next_retry_attempt_at = None
+                                session.add(sub)
+                                await session.commit()
+                                # Ждём webhook, пропускаем исключение
+                                continue
+                            else:
+                                logger.warning(f"❌ Автопродление НЕ удалось для {user.telegram_id}: status={status}")
+                                # Увеличиваем счётчик неудач и планируем retry
+                                sub.autopayment_fail_count = (sub.autopayment_fail_count or 0) + 1
+                                # Следующая попытка через 12 часов (2 раза в день)
+                                sub.next_retry_attempt_at = datetime.now() + timedelta(hours=12)
+                                session.add(sub)
+                                logger.info(f"   Неудача #{sub.autopayment_fail_count}, следующая попытка: {sub.next_retry_attempt_at}")
+                                # Продолжаем исключение
+                        except Exception as e_auto:
+                            logger.error(f"❌ Ошибка автопродления для {user.telegram_id}: {e_auto}")
+                            # Увеличиваем счётчик и планируем retry
+                            sub.autopayment_fail_count = (sub.autopayment_fail_count or 0) + 1
+                            sub.next_retry_attempt_at = datetime.now() + timedelta(hours=12)
+                            session.add(sub)
+                            # Продолжаем исключение
+
                     # Проверяем, является ли он участником группы
                     logger.debug(f"Проверка членства для TG_ID={user.telegram_id}...")
                     is_member = await self.is_member(user.telegram_id)
@@ -108,6 +177,14 @@ class GroupManager:
                                 logger.debug(f"Деактивация подписки ID: {sub.id} для TG_ID={user.telegram_id}")
                                 await deactivate_subscription(session, sub.id)
                                 logger.info(f"Подписка ID: {sub.id} деактивирована.")
+                            
+                            # Сбрасываем streak если авто выключено (окончательный уход)
+                            if not (user.is_recurring_active and user.yookassa_payment_method_id):
+                                old_streak = user.autopay_streak or 0
+                                if old_streak > 0:
+                                    user.autopay_streak = 0
+                                    session.add(user)
+                                    logger.info(f"Streak сброшен для {user.telegram_id}: {old_streak} → 0 (подписка истекла, авто выключено)")
                                 
                             # Отправляем уведомление об исключении
                             try:
@@ -260,7 +337,7 @@ class GroupManager:
                         if days_left == 7:
                             notification_type = 'expiration_7days'
                             
-                            if user.is_recurring_active and user.payment_method_id:
+                            if user.is_recurring_active and user.yookassa_payment_method_id:
                                 # Автопродление включено
                                 msg = (
                                     "💖 Красотка, напоминаю тебе! 💖\n\n"
@@ -321,7 +398,7 @@ class GroupManager:
                             time_text = f"через {days_left} дней"
 
                         # Улучшенные тексты в стиле сообщества
-                        if user.is_recurring_active and user.payment_method_id:
+                        if user.is_recurring_active and user.yookassa_payment_method_id:
                             # Автопродление включено - не предлагаем продление
                             if days_left == 0:
                                 msg = (
@@ -391,6 +468,140 @@ class GroupManager:
                     except Exception as e:
                         logger.error(f"Ошибка при отправке уведомления пользователю {user.telegram_id}: {e}")
 
+    async def retry_failed_autopayments(self):
+        """
+        Повторные попытки автопродления для неудачных платежей.
+        - Максимум 6 попыток (3 дня × 2 раза в день)
+        - После 6 неудач — отправляем сообщение пользователю
+        """
+        logger.info("--- Проверка retry автопродлений ---")
+        
+        async with AsyncSessionLocal() as session:
+            try:
+                from sqlalchemy import select, and_
+                from database.models import Subscription, User
+                
+                # Находим подписки с запланированным retry
+                result = await session.execute(
+                    select(Subscription, User)
+                    .join(User, Subscription.user_id == User.id)
+                    .where(
+                        and_(
+                            Subscription.next_retry_attempt_at <= datetime.now(),
+                            Subscription.next_retry_attempt_at.isnot(None),
+                            Subscription.is_active == False,
+                            User.is_recurring_active == True,
+                            User.yookassa_payment_method_id.isnot(None)
+                        )
+                    )
+                )
+                retry_subs = result.all()
+                
+                logger.info(f"Найдено {len(retry_subs)} подписок для retry автопродления")
+                
+                for sub, user in retry_subs:
+                    fail_count = sub.autopayment_fail_count or 0
+                    
+                    # Максимум 6 попыток (3 дня × 2 раза)
+                    if fail_count >= 6:
+                        logger.info(f"❌ Превышен лимит попыток для {user.telegram_id} ({fail_count} неудач)")
+                        # Отправляем предупреждение и прекращаем retry (но авто НЕ выключаем — даём шанс оплатить)
+                        try:
+                            streak = user.autopay_streak or 0
+                            if streak > 0:
+                                # Есть стрик — предупреждаем о потере
+                                msg = (
+                                    "💔 Красотка, у нас не получилось продлить подписку 💔\n\n"
+                                    "Мы пробовали списать оплату несколько раз, "
+                                    "но платёж не прошёл.\n\n"
+                                    f"🔥 У тебя сейчас <b>{streak}</b> автопродлений подряд!\n"
+                                    "⚠️ Если не оплатить — стрик сбросится и бонусы "
+                                    "придётся копить заново 😢\n\n"
+                                    "Проверь карту и продли подписку, чтобы "
+                                    "сохранить свой прогресс! 💪"
+                                )
+                            else:
+                                # Нет стрика — обычное сообщение
+                                msg = (
+                                    "💔 К сожалению, мы не смогли продлить твою подписку 💔\n\n"
+                                    "Мы несколько раз пытались списать оплату за подписку Mom's Club, "
+                                    "но платёж не прошёл.\n\n"
+                                    "Возможные причины:\n"
+                                    "• Недостаточно средств на карте\n"
+                                    "• Карта заблокирована или истёк срок\n"
+                                    "• Лимит на интернет-платежи\n\n"
+                                    "Мы очень хотим видеть тебя в нашем уютном клубе! "
+                                    "Продли подписку, нажав на кнопку ниже 💖"
+                                )
+                            keyboard = InlineKeyboardMarkup(
+                                inline_keyboard=[
+                                    [InlineKeyboardButton(text="💳 Продлить подписку", callback_data="renew_subscription")],
+                                    [InlineKeyboardButton(text="🔄 Изменить способ оплаты", callback_data="change_payment_method")]
+                                ]
+                            )
+                            await self.bot.send_message(user.telegram_id, msg, reply_markup=keyboard, parse_mode="HTML")
+                            logger.info(f"Отправлено предупреждение о неудачном автопродлении пользователю {user.telegram_id} (streak={streak})")
+                        except Exception as e_msg:
+                            logger.error(f"Ошибка отправки сообщения {user.telegram_id}: {e_msg}")
+                        
+                        # Прекращаем retry (не спамим!), но авто НЕ выключаем — даём шанс оплатить вручную
+                        # Стрик сбросится когда подписка окончательно истечёт и пользователя кикнут
+                        sub.next_retry_attempt_at = None
+                        sub.autopayment_fail_count = 0
+                        session.add(sub)
+                        logger.info(f"Retry прекращены для {user.telegram_id}, авто оставлено включённым (шанс оплатить)")
+                        continue
+                    
+                    # Пробуем снова
+                    logger.info(f"🔄 Retry #{fail_count + 1} для {user.telegram_id} (@{user.username})")
+                    
+                    try:
+                        # Определяем тариф
+                        renewal_days = sub.renewal_duration_days or SUBSCRIPTION_DAYS
+                        if renewal_days >= 90:
+                            renewal_amount = SUBSCRIPTION_PRICE_3MONTHS
+                        elif renewal_days >= 60:
+                            renewal_amount = SUBSCRIPTION_PRICE_2MONTHS
+                        else:
+                            renewal_amount = SUBSCRIPTION_PRICE
+                        
+                        status, payment_id = create_autopayment(
+                            user_id=user.telegram_id,
+                            amount=renewal_amount,
+                            description=f"Автопродление Mom's Club {renewal_days} дней ({user.username or user.first_name})",
+                            payment_method_id=user.yookassa_payment_method_id,
+                            days=renewal_days
+                        )
+                        
+                        if status == "success":
+                            logger.info(f"✅ Retry успешен для {user.telegram_id}! Payment ID: {payment_id}")
+                            # ВАЖНО: Помечаем старую подписку как неактивную чтобы webhook создал новую
+                            sub.is_active = False
+                            sub.autopayment_fail_count = 0
+                            sub.next_retry_attempt_at = None
+                        elif status == "pending":
+                            logger.info(f"⏳ Retry в обработке для {user.telegram_id}")
+                            # ВАЖНО: Помечаем старую подписку как неактивную
+                            sub.is_active = False
+                            sub.next_retry_attempt_at = None  # Ждём webhook
+                        else:
+                            logger.warning(f"❌ Retry неудачен для {user.telegram_id}")
+                            sub.autopayment_fail_count = fail_count + 1
+                            sub.next_retry_attempt_at = datetime.now() + timedelta(hours=12)
+                        
+                        session.add(sub)
+                        
+                    except Exception as e_retry:
+                        logger.error(f"Ошибка retry для {user.telegram_id}: {e_retry}")
+                        sub.autopayment_fail_count = fail_count + 1
+                        sub.next_retry_attempt_at = datetime.now() + timedelta(hours=12)
+                        session.add(sub)
+                
+                await session.commit()
+                
+            except Exception as e:
+                logger.error(f"Ошибка в retry_failed_autopayments: {e}", exc_info=True)
+
     async def start_monitoring(self):
         """
         Запускает периодический мониторинг подписок
@@ -400,6 +611,9 @@ class GroupManager:
             try:
                 # Проверяем истекшие подписки
                 await self.check_expired_subscriptions()
+                
+                # Повторные попытки автопродления
+                await self.retry_failed_autopayments()
                 
                 # Уведомляем о подписках, которые скоро истекут
                 await self.notify_expiring_subscriptions()
