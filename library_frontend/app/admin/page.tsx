@@ -1776,7 +1776,7 @@ export default function AdminPage() {
             </form>
             
             {/* Кнопки - фиксированы внизу */}
-            <div className="flex gap-3 p-4 sm:p-6 border-t border-[#E8D4BA]/30 bg-white shrink-0" style={{ paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom) + 60px))' }}>
+            <div className="flex gap-3 p-4 sm:p-6 border-t border-[#E8D4BA]/30 bg-white shrink-0" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
               <button
                 type="button"
                 onClick={() => setShowCategoryForm(false)}
@@ -1806,10 +1806,10 @@ export default function AdminPage() {
         />
       )}
       
-      {/* Нижнее меню - только на мобилке */}
+      {/* Нижнее меню - только на мобилке, скрывается при открытых формах */}
       <nav 
         className={`sm:hidden fixed bottom-0 left-0 right-0 bg-white/70 backdrop-blur-2xl border-t border-[#E8D4BA]/20 px-2 py-2 z-50 transition-transform duration-300 ${
-          isMenuVisible ? 'translate-y-0' : 'translate-y-full'
+          isMenuVisible && !showMaterialForm && !showCategoryForm ? 'translate-y-0' : 'translate-y-full'
         }`} 
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
       >
