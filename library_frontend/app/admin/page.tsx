@@ -2064,7 +2064,7 @@ export default function AdminPage() {
             </form>
             
             {/* Кнопки - фиксированы внизу */}
-            <div className="flex gap-3 p-4 sm:p-6 border-t border-[#E8D4BA]/30 bg-white shrink-0">
+            <div className="flex gap-3 p-4 sm:p-6 border-t border-[#E8D4BA]/30 bg-white shrink-0" style={{ paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom) + 60px))' }}>
               <button
                 type="button"
                 onClick={() => setShowCategoryForm(false)}
