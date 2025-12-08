@@ -6,7 +6,7 @@
 // ==================== АДМИНЫ ====================
 
 /** ID администраторов Telegram */
-export const ADMIN_IDS = [534740911, 44054166] as const
+export const ADMIN_IDS = [534740911, 44054166, 5027032264] as const
 
 /** Информация о группах админов */
 export const ADMIN_GROUP_INFO: Record<string, { emoji: string; name: string }> = {
