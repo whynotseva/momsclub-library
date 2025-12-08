@@ -91,7 +91,7 @@ export function MaterialCard({
           </div>
         )}
 
-        <span className="text-xs bg-[#F5E6D3] text-[#8B7355] px-2 py-1 rounded-full font-medium">
+        <span className="text-xs bg-[#F5E6D3] text-[#8B7355] px-2 py-1 rounded-full font-medium inline-block max-w-full truncate" title={categoryName}>
           {categoryName}
         </span>
 
