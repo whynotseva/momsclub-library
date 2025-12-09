@@ -102,15 +102,28 @@ def telegram_login(
             detail="Пользователь не найден в системе MomsClub"
         )
     
-    user_id, telegram_id, first_name, username = user_result
+    user_id, telegram_id, _, _ = user_result  # first_name и username берём из auth_data (актуальные)
+    first_name = auth_data.first_name
+    username = auth_data.username
     
-    # Сохраняем/обновляем photo_url из Telegram
+    # Всегда обновляем photo_url, first_name и username из Telegram (могут меняться)
+    db.execute(
+        text("""
+            UPDATE users 
+            SET photo_url = :photo_url,
+                first_name = :first_name,
+                username = :username
+            WHERE telegram_id = :tg_id
+        """),
+        {
+            "photo_url": auth_data.photo_url,  # Может быть None если нет аватарки
+            "first_name": auth_data.first_name,
+            "username": auth_data.username,
+            "tg_id": auth_data.id
+        }
+    )
+    db.commit()
     if auth_data.photo_url:
-        db.execute(
-            text("UPDATE users SET photo_url = :photo_url WHERE telegram_id = :tg_id"),
-            {"photo_url": auth_data.photo_url, "tg_id": auth_data.id}
-        )
-        db.commit()
         print(f"📸 Updated photo_url for user {telegram_id}")
     
     # Проверяем активную подписку
