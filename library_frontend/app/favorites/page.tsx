@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
 import { Material } from '@/lib/types'
 import { ADMIN_IDS } from '@/lib/constants'
 import { useScrollVisibility } from '@/hooks/useScrollVisibility'
+import { LoadingSpinner, EmptyState } from '@/components/shared'
 
 export default function FavoritesPage() {
   const router = useRouter()
@@ -80,11 +81,7 @@ export default function FavoritesPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] flex items-center justify-center">
-        <p className="text-[#8B8279]">Загрузка...</p>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   return (
@@ -137,14 +134,12 @@ export default function FavoritesPage() {
         </div>
         
         {favorites.length === 0 ? (
-          <div className="bg-white/90 rounded-3xl p-16 text-center shadow-xl shadow-[#C9A882]/10 border border-[#E8D4BA]/40">
-            <div className="text-6xl mb-6">💝</div>
-            <h3 className="text-xl font-bold text-[#2D2A26] mb-2">Пока пусто</h3>
-            <p className="text-[#8B8279] mb-6">Добавь материалы в избранное, нажав ❤️ на карточке</p>
-            <a href="/library" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#B08968] to-[#A67C52] text-white font-semibold rounded-xl hover:shadow-lg transition-all">
-              Перейти в библиотеку
-            </a>
-          </div>
+          <EmptyState
+            icon="💝"
+            title="Пока пусто"
+            description="Добавь материалы в избранное, нажав ❤️ на карточке"
+            actionText="Перейти в библиотеку"
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {favorites.map((material) => (
