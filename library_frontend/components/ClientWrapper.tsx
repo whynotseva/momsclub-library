@@ -1,6 +1,7 @@
 'use client'
 
 import { ReactNode, useEffect } from 'react'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 export default function ClientWrapper({ children }: { children: ReactNode }) {
   // Регистрация Service Worker для Push уведомлений
@@ -12,5 +13,5 @@ export default function ClientWrapper({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  return <>{children}</>
+  return <AuthProvider>{children}</AuthProvider>
 }

@@ -1,64 +1,37 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import { Material } from '@/lib/types'
-import { ADMIN_IDS } from '@/lib/constants'
 import { useScrollVisibility } from '@/hooks/useScrollVisibility'
+import { useAuthContext } from '@/contexts/AuthContext'
 import { LoadingSpinner, EmptyState } from '@/components/shared'
 
 export default function FavoritesPage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
+  // Авторизация из контекста
+  const { user, isAdmin, loading: authLoading, logout } = useAuthContext()
+  
+  const [loadingFavorites, setLoadingFavorites] = useState(true)
   const [favorites, setFavorites] = useState<Material[]>([])
-  const [user, setUser] = useState({ name: '', avatar: '' })
-  const [isAdmin, setIsAdmin] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const isVisible = useScrollVisibility()
 
+  // Загружаем только избранное (авторизация уже проверена в контексте)
   useEffect(() => {
-    const loadData = async () => {
-      const token = localStorage.getItem('access_token')
-      if (!token) {
-        router.push('/login')
-        return
-      }
-
+    const loadFavorites = async () => {
+      if (authLoading || !user) return
+      
       try {
-        // Проверяем подписку
-        const subResponse = await api.get('/auth/check-subscription')
-        if (!subResponse.data.has_active_subscription) {
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('user')
-          alert('Ваша подписка истекла. Продлите подписку через @momsclubsubscribe_bot')
-          router.push('/login')
-          return
-        }
-
-        const [favResponse, meResponse] = await Promise.all([
-          api.get('/materials/favorites/my'),
-          api.get('/auth/me')
-        ])
-        setFavorites(favResponse.data || [])
-        const userData = meResponse.data
-        setUser({
-          name: userData.first_name || 'Гость',
-          avatar: userData.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}&backgroundColor=ffdfbf`
-        })
-        if (ADMIN_IDS.includes(userData.telegram_id)) setIsAdmin(true)
+        const response = await api.get('/materials/favorites/my')
+        setFavorites(response.data || [])
       } catch (error) {
-        console.error('Error loading data:', error)
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('user')
-        router.push('/login')
-        return
+        console.error('Error loading favorites:', error)
       }
-      setLoading(false)
+      setLoadingFavorites(false)
     }
-    loadData()
-  }, [router])
+    loadFavorites()
+  }, [authLoading, user])
 
   const openMaterial = async (material: Material) => {
     try {
@@ -80,7 +53,7 @@ export default function FavoritesPage() {
     }
   }
 
-  if (loading) {
+  if (authLoading || loadingFavorites) {
     return <LoadingSpinner />
   }
 
@@ -103,20 +76,20 @@ export default function FavoritesPage() {
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center space-x-2">
-                  <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-full border-2 border-[#E8D4BA] object-cover hover:border-[#B08968] transition-colors" />
+                  <img src={user?.avatar || ''} alt={user?.name || ''} className="w-9 h-9 rounded-full border-2 border-[#E8D4BA] object-cover hover:border-[#B08968] transition-colors" />
                   <span className="text-[#8B8279] text-sm font-medium hidden md:block">Выйти</span>
                 </button>
                 {showProfileMenu && (
                   <div className="absolute right-0 top-12 bg-white rounded-xl shadow-xl border border-[#E8D4BA]/50 py-2 min-w-[160px] z-50">
                     <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-[#2D2A26]">{user.name}</p>
+                      <p className="text-sm font-medium text-[#2D2A26]">{user?.name}</p>
                     </div>
                     {isAdmin && (
                       <Link href="/admin" className="block w-full px-4 py-2 text-left text-sm text-[#B08968] hover:bg-[#F5E6D3] transition-colors">
                         ⚙️ Админ-панель
                       </Link>
                     )}
-                    <button onClick={() => { localStorage.removeItem('access_token'); localStorage.removeItem('user'); router.push('/login') }} className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50">
+                    <button onClick={logout} className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50">
                       🚪 Выйти
                     </button>
                   </div>
