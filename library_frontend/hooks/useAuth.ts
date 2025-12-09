@@ -13,6 +13,7 @@ interface UserData {
   loyaltyLevel: LoyaltyLevel
   subscriptionDaysLeft: number
   isAdmin: boolean
+  hasSubscription: boolean
 }
 
 interface UseAuthReturn {
@@ -59,13 +60,8 @@ export function useAuth(): UseAuthReturn {
       const subResponse = await api.get('/auth/check-subscription')
       const subData = subResponse.data
       
-      if (!subData.has_active_subscription) {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('user')
-        alert('Ваша подписка истекла. Продлите подписку через @momsclubsubscribe_bot')
-        router.push('/login')
-        return
-      }
+      // НЕ блокируем вход без подписки — редирект делает SubscriptionGuard
+      const hasActiveSub = subData.has_active_subscription
 
       const isAdmin = ADMIN_IDS.includes(userData.telegram_id)
       
@@ -77,6 +73,7 @@ export function useAuth(): UseAuthReturn {
         loyaltyLevel: userData.loyalty_level || 'none',
         subscriptionDaysLeft: subData.days_left || 0,
         isAdmin,
+        hasSubscription: hasActiveSub,
       })
       
       // Сохраняем в localStorage
@@ -97,6 +94,7 @@ export function useAuth(): UseAuthReturn {
             loyaltyLevel: userData.loyalty_level || 'none',
             subscriptionDaysLeft: 0,
             isAdmin: ADMIN_IDS.includes(userData.telegram_id),
+            hasSubscription: false, // fallback
           })
         } catch {
           logout()

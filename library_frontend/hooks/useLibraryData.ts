@@ -72,15 +72,7 @@ export function useLibraryData() {
         const response = await api.get('/auth/check-subscription')
         const subData = response.data
         
-        // Проверяем что подписка активна
-        if (!subData.has_active_subscription) {
-          // Подписка истекла — кикаем на страницу входа
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('user')
-          alert('Ваша подписка истекла. Продлите подписку через @momsclubsubscribe_bot')
-          router.push('/login')
-          return
-        }
+        // НЕ блокируем здесь — SubscriptionGuard сам редиректит на /profile
         
         setUser(prev => ({
           ...prev,
