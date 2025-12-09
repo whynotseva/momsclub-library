@@ -1,6 +1,7 @@
 'use client'
 
 import { ADMIN_GROUP_INFO } from '@/lib/constants'
+import { Avatar } from '@/components/shared'
 
 // Типы
 interface OnlineUser {
@@ -132,13 +133,7 @@ export function StatsTab({
                   key={user.telegram_id} 
                   className="flex items-center gap-2 bg-[#F5E6D3]/50 rounded-lg px-3 py-2"
                 >
-                  {user.photo_url ? (
-                    <img src={user.photo_url} alt="" className="w-7 h-7 rounded-full" />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-[#B08968] text-white text-xs flex items-center justify-center">
-                      {user.first_name.charAt(0)}
-                    </div>
-                  )}
+                  <Avatar src={user.photo_url} name={user.first_name} size="sm" />
                   <div className="flex-1 min-w-0">
                     <span className="text-sm text-[#5D4E3A] font-medium truncate block">{user.first_name}</span>
                     {user.username && (
@@ -181,13 +176,7 @@ export function StatsTab({
                   className="flex items-center gap-2 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg px-2 py-1 border border-amber-200/50"
                   title={`${user.first_name}${user.admin_group ? ` (${ADMIN_GROUP_INFO[user.admin_group]?.name || ''})` : ''}`}
                 >
-                  {user.photo_url ? (
-                    <img src={user.photo_url} alt="" className="w-6 h-6 rounded-full" />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-[#B08968] text-white text-xs flex items-center justify-center">
-                      {user.first_name.charAt(0)}
-                    </div>
-                  )}
+                  <Avatar src={user.photo_url} name={user.first_name} size="sm" className="w-6 h-6" />
                   <span className="text-xs text-[#5D4E3A] font-medium">{user.first_name}</span>
                   {user.admin_group && ADMIN_GROUP_INFO[user.admin_group] && (
                     <span className="text-xs">{ADMIN_GROUP_INFO[user.admin_group].emoji}</span>
@@ -315,13 +304,7 @@ export function StatsTab({
                           : 'bg-[#F5E6D3]/30 hover:bg-[#F5E6D3]/50'
                       }`}
                     >
-                      {u.photo_url ? (
-                        <img src={u.photo_url} alt="" className="w-8 h-8 rounded-full" />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-[#B08968] text-white text-sm flex items-center justify-center">
-                          {u.first_name?.charAt(0) || '?'}
-                        </div>
-                      )}
+                      <Avatar src={u.photo_url} name={u.first_name || '?'} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-medium truncate ${pushForm.targetUser === (u.username || String(u.telegram_id)) ? 'text-white' : 'text-[#5D4E3A]'}`}>
                           {u.first_name || 'Без имени'}
@@ -389,13 +372,7 @@ export function StatsTab({
                 className="flex items-center gap-3 p-3 bg-[#F5E6D3]/30 rounded-xl hover:bg-[#F5E6D3]/50 transition-colors"
               >
                 {/* Аватар */}
-                {activity.user.photo_url ? (
-                  <img src={activity.user.photo_url} alt="" className="w-9 h-9 rounded-full" />
-                ) : (
-                  <div className="w-9 h-9 rounded-full bg-[#B08968] text-white text-sm flex items-center justify-center font-medium">
-                    {activity.user.first_name.charAt(0)}
-                  </div>
-                )}
+                <Avatar src={activity.user.photo_url} name={activity.user.first_name} size="md" />
                 
                 {/* Контент */}
                 <div className="flex-1 min-w-0">

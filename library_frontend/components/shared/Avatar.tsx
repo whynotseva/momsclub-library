@@ -1,6 +1,6 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useState } from 'react'
 
 interface AvatarProps {
   src?: string | null
@@ -19,6 +19,7 @@ const sizeClasses = {
 
 /**
  * Компонент аватара с fallback на инициалы
+ * При ошибке загрузки изображения автоматически показывает инициалы
  */
 export const Avatar = memo(function Avatar({
   src,
@@ -27,6 +28,8 @@ export const Avatar = memo(function Avatar({
   className = '',
   onClick,
 }: AvatarProps) {
+  const [imgError, setImgError] = useState(false)
+  
   // Получаем инициалы из имени
   const initials = name
     .split(' ')
@@ -38,13 +41,15 @@ export const Avatar = memo(function Avatar({
   const sizeClass = sizeClasses[size]
   const baseClass = `rounded-full border-2 border-[#E8D4BA] object-cover ${onClick ? 'cursor-pointer hover:border-[#B08968]' : ''} transition-colors`
 
-  if (src) {
+  // Показываем img только если есть src и нет ошибки загрузки
+  if (src && !imgError) {
     return (
       <img
         src={src}
         alt={name}
         className={`${sizeClass} ${baseClass} ${className}`}
         onClick={onClick}
+        onError={() => setImgError(true)}
       />
     )
   }
