@@ -14,7 +14,7 @@ export default function AdminPage() {
     stats, materials, loadingMaterials, categories,
     recentActivity, adminHistory, loadingHistory,
     pushSubscribers, usersStats, analytics, selectedUser, copiedUsername,
-    loadStats, loadMaterials, loadCategories, loadRecentActivity,
+    loadStats, loadMaterials, loadCategories,
     loadPushSubscribers, loadUsersStats, loadAnalytics, loadUserDetails, loadAdminHistory,
     copyUsername, closeUserDetails, addActivity, addAdminAction, updateCategories, api,
   } = useAdminData()
