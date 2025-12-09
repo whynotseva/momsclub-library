@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { usePresence, Activity as WsActivity, AdminAction as WsAdminAction } from '@/hooks/usePresence'
 import { ADMIN_IDS, ADMIN_GROUP_INFO } from '@/lib/constants'
-import { CategoriesTab, HistoryTab, UsersTab, MaterialsTab, MaterialFormModal, CategoryFormModal } from '@/components/admin'
+import { CategoriesTab, HistoryTab, UsersTab, MaterialsTab, MaterialFormModal, CategoryFormModal, StatsTab } from '@/components/admin'
 
 // API клиент
 const api = axios.create({
@@ -797,95 +797,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Виджет онлайн пользователей - только на вкладке статистики */}
-        {activeTab === 'stats' && (
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* В библиотеке */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 border border-[#E8D4BA]/30">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium text-[#5D4E3A] flex items-center gap-2">
-                <span className="text-lg">📚</span> В библиотеке
-                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-              </h3>
-              <span className="text-sm text-[#8B8279]">{libraryCount} онлайн</span>
-            </div>
-            {onlineUsers.library.length > 0 ? (
-              <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                {onlineUsers.library.slice(0, 8).map((user) => (
-                  <div 
-                    key={user.telegram_id} 
-                    className="flex items-center gap-2 bg-[#F5E6D3]/50 rounded-lg px-3 py-2"
-                  >
-                    {user.photo_url ? (
-                      <img src={user.photo_url} alt="" className="w-7 h-7 rounded-full" />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-[#B08968] text-white text-xs flex items-center justify-center">
-                        {user.first_name.charAt(0)}
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm text-[#5D4E3A] font-medium truncate block">{user.first_name}</span>
-                      {user.username && (
-                        <button 
-                          onClick={() => copyUsername(user.username!)}
-                          className="text-xs text-[#8B8279] hover:text-[#B08968] transition-colors"
-                        >
-                          @{user.username} {copiedUsername === user.username && '✓'}
-                        </button>
-                      )}
-                    </div>
-                    <span className="text-sm" title={pushSubscribers.includes(user.telegram_id) ? 'Push вкл' : 'Push выкл'}>
-                      {pushSubscribers.includes(user.telegram_id) ? '🔔' : '⚪'}
-                    </span>
-                  </div>
-                ))}
-                {onlineUsers.library.length > 8 && (
-                  <p className="text-xs text-[#8B8279] text-center">+{onlineUsers.library.length - 8} ещё</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-[#8B8279]">Никого нет онлайн</p>
-            )}
-          </div>
-
-          {/* В админке */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 border border-[#E8D4BA]/30">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium text-[#5D4E3A] flex items-center gap-2">
-                <span className="text-lg">⚙️</span> В админке
-                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-              </h3>
-              <span className="text-sm text-[#8B8279]">{adminCount} онлайн</span>
-            </div>
-            {onlineUsers.admin.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {onlineUsers.admin.map((user) => (
-                  <div 
-                    key={user.telegram_id} 
-                    className="flex items-center gap-2 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg px-2 py-1 border border-amber-200/50"
-                    title={`${user.first_name}${user.admin_group ? ` (${ADMIN_GROUP_INFO[user.admin_group]?.name || ''})` : ''}`}
-                  >
-                    {user.photo_url ? (
-                      <img src={user.photo_url} alt="" className="w-6 h-6 rounded-full" />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-[#B08968] text-white text-xs flex items-center justify-center">
-                        {user.first_name.charAt(0)}
-                      </div>
-                    )}
-                    <span className="text-xs text-[#5D4E3A] font-medium">{user.first_name}</span>
-                    {user.admin_group && ADMIN_GROUP_INFO[user.admin_group] && (
-                      <span className="text-xs">{ADMIN_GROUP_INFO[user.admin_group].emoji}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-[#8B8279]">Никого нет онлайн</p>
-            )}
-          </div>
-        </div>
-        )}
-
         {/* Tabs - только на десктопе */}
         <div className="hidden sm:flex gap-2 mb-6 bg-white/60 backdrop-blur-lg rounded-2xl p-2 border border-[#E8D4BA]/20 overflow-x-auto">
           {[
@@ -921,242 +832,26 @@ export default function AdminPage() {
         </div>
 
         {/* Stats Tab */}
-        {activeTab === 'stats' && stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-[#E8D4BA]/30">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl">📚</span>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#5D4E3A]">{stats.materials.total}</p>
-                  <p className="text-sm text-[#8B8279]">Материалов</p>
-                </div>
-              </div>
-              <div className="mt-4 flex gap-4 text-xs">
-                <span className="text-green-600">✓ {stats.materials.published} опубл.</span>
-                <span className="text-orange-500">◐ {stats.materials.drafts} черновик</span>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-[#E8D4BA]/30">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl">👁</span>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#5D4E3A]">{stats.views_total}</p>
-                  <p className="text-sm text-[#8B8279]">Просмотров</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-[#E8D4BA]/30">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-pink-500 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl">⭐</span>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#5D4E3A]">{stats.favorites_total}</p>
-                  <p className="text-sm text-[#8B8279]">В избранном</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-[#E8D4BA]/30">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl">📁</span>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#5D4E3A]">{stats.categories_total}</p>
-                  <p className="text-sm text-[#8B8279]">Категорий</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Push-рассылка и Аналитика */}
         {activeTab === 'stats' && (
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Кнопка Push */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-[#E8D4BA]/30">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-[#5D4E3A] flex items-center gap-2">
-                  <span>🔔</span> Push-рассылка
-                </h3>
-                <span className="text-sm text-[#8B8279]">{usersStats?.with_push || 0} подписчиков</span>
-              </div>
-              {!showPushForm ? (
-                <button
-                  onClick={() => setShowPushForm(true)}
-                  className="w-full py-3 bg-gradient-to-r from-[#C9A882] to-[#B08968] text-white rounded-xl font-medium hover:shadow-lg transition-all"
-                >
-                  Отправить Push
-                </button>
-              ) : (
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Заголовок"
-                    value={pushForm.title}
-                    onChange={(e) => setPushForm({...pushForm, title: e.target.value})}
-                    className="w-full px-4 py-2 border border-[#E8D4BA]/50 rounded-xl focus:ring-2 focus:ring-[#B08968]/30 outline-none"
-                  />
-                  <textarea
-                    placeholder="Текст сообщения"
-                    value={pushForm.body}
-                    onChange={(e) => setPushForm({...pushForm, body: e.target.value})}
-                    className="w-full px-4 py-2 border border-[#E8D4BA]/50 rounded-xl focus:ring-2 focus:ring-[#B08968]/30 outline-none resize-none"
-                    rows={2}
-                  />
-                  {/* Выбор получателя */}
-                  <div className="space-y-2">
-                    <p className="text-xs text-[#8B8279]">Кому отправить:</p>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => setPushForm({...pushForm, targetUser: ''})}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                          !pushForm.targetUser ? 'bg-[#B08968] text-white' : 'bg-[#F5E6D3]/50 text-[#8B8279] hover:bg-[#F5E6D3]'
-                        }`}
-                      >
-                        👥 Всем ({usersStats?.with_push || 0})
-                      </button>
-                    </div>
-                    <div className="space-y-1 max-h-[150px] overflow-y-auto">
-                      {usersStats?.users.filter(u => u.has_push).map(u => (
-                        <button
-                          key={u.telegram_id}
-                          onClick={() => setPushForm({...pushForm, targetUser: u.username || String(u.telegram_id)})}
-                          className={`w-full flex items-center gap-2 p-2 rounded-xl text-left transition-all ${
-                            pushForm.targetUser === (u.username || String(u.telegram_id)) 
-                              ? 'bg-[#B08968] text-white' 
-                              : 'bg-[#F5E6D3]/30 hover:bg-[#F5E6D3]/50'
-                          }`}
-                        >
-                          {u.photo_url ? (
-                            <img src={u.photo_url} alt="" className="w-8 h-8 rounded-full" />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-[#B08968] text-white text-sm flex items-center justify-center">
-                              {u.first_name?.charAt(0) || '?'}
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-medium truncate ${pushForm.targetUser === (u.username || String(u.telegram_id)) ? 'text-white' : 'text-[#5D4E3A]'}`}>
-                              {u.first_name || 'Без имени'}
-                            </p>
-                            {u.username && (
-                              <p className={`text-xs truncate ${pushForm.targetUser === (u.username || String(u.telegram_id)) ? 'text-white/80' : 'text-[#8B8279]'}`}>
-                                @{u.username}
-                              </p>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => sendPush(!pushForm.targetUser)}
-                      disabled={pushSending || !pushForm.title || !pushForm.body}
-                      className="flex-1 py-2 bg-gradient-to-r from-[#C9A882] to-[#B08968] text-white rounded-xl font-medium disabled:opacity-50"
-                    >
-                      {pushSending ? '⏳' : pushForm.targetUser ? `Отправить ${pushForm.targetUser}` : 'Отправить всем'}
-                    </button>
-                    <button
-                      onClick={() => { setShowPushForm(false); setPushForm({...pushForm, title: '', body: '', targetUser: ''}); }}
-                      className="px-4 py-2 border border-[#E8D4BA] text-[#8B8279] rounded-xl"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Топ материалов */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-[#E8D4BA]/30">
-              <h3 className="font-semibold text-[#5D4E3A] mb-4 flex items-center gap-2">
-                <span>🏆</span> Топ за неделю
-              </h3>
-              {analytics?.top_materials.length ? (
-                <div className="space-y-2">
-                  {analytics.top_materials.map((m, i) => (
-                    <div key={m.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#F5E6D3]/30">
-                      <span className="text-lg">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`}</span>
-                      <span className="flex-1 text-sm text-[#5D4E3A] truncate">{m.title}</span>
-                      <span className="text-sm text-[#8B8279]">{m.views} 👁</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-[#8B8279]">Нет данных</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Лента активности - только на вкладке статистики */}
-        {activeTab === 'stats' && recentActivity.length > 0 && (
-          <div className="mt-6 bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-[#E8D4BA]/30">
-            <h3 className="font-semibold text-[#5D4E3A] mb-4 flex items-center gap-2">
-              <span>📋</span> Последние действия
-            </h3>
-            <div className="space-y-3 max-h-[400px] overflow-y-auto">
-              {recentActivity.map((activity, index) => (
-                <div 
-                  key={index}
-                  className="flex items-center gap-3 p-3 bg-[#F5E6D3]/30 rounded-xl hover:bg-[#F5E6D3]/50 transition-colors"
-                >
-                  {/* Аватар */}
-                  {activity.user.photo_url ? (
-                    <img src={activity.user.photo_url} alt="" className="w-9 h-9 rounded-full" />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-[#B08968] text-white text-sm flex items-center justify-center font-medium">
-                      {activity.user.first_name.charAt(0)}
-                    </div>
-                  )}
-                  
-                  {/* Контент */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[#5D4E3A]">
-                      <span className="font-medium">{activity.user.first_name}</span>
-                      <span className="text-[#8B8279]">
-                        {activity.type === 'view' && ' открыл(а) '}
-                        {activity.type === 'favorite_add' && ' добавил(а) в избранное '}
-                        {activity.type === 'favorite_remove' && ' убрал(а) из избранного '}
-                        {activity.type === 'favorite' && ' добавил(а) в избранное '}
-                      </span>
-                      <span className="font-medium truncate">{activity.material.icon} {activity.material.title}</span>
-                    </p>
-                    <p className="text-xs text-[#8B8279] mt-0.5">
-                      {new Date(activity.created_at).toLocaleString('ru-RU', { 
-                        day: 'numeric', 
-                        month: 'short', 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </p>
-                  </div>
-                  
-                  {/* Иконка действия */}
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    activity.type === 'view' 
-                      ? 'bg-blue-100 text-blue-600' 
-                      : activity.type === 'favorite_remove'
-                        ? 'bg-gray-100 text-gray-600'
-                        : 'bg-pink-100 text-pink-600'
-                  }`}>
-                    {activity.type === 'view' && '👁'}
-                    {activity.type === 'favorite_add' && '⭐'}
-                    {activity.type === 'favorite_remove' && '💔'}
-                    {activity.type === 'favorite' && '⭐'}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <StatsTab
+            stats={stats}
+            onlineUsers={onlineUsers}
+            isConnected={isConnected}
+            libraryCount={libraryCount}
+            adminCount={adminCount}
+            pushSubscribers={pushSubscribers}
+            usersStats={usersStats}
+            showPushForm={showPushForm}
+            setShowPushForm={setShowPushForm}
+            pushForm={pushForm}
+            setPushForm={setPushForm}
+            pushSending={pushSending}
+            sendPush={sendPush}
+            analytics={analytics}
+            recentActivity={recentActivity}
+            copiedUsername={copiedUsername}
+            copyUsername={copyUsername}
+          />
         )}
 
         {/* Materials Tab */}
