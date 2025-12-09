@@ -3,66 +3,30 @@ API endpoints для материалов библиотеки
 """
 
 from typing import List, Optional
-from math import ceil
 from datetime import datetime
 
 import asyncio
 from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select, func, or_, and_, distinct, text
+from sqlalchemy import select, func, or_, text, distinct
 
 from app.database import get_db
 from app.schemas import Material, MaterialListItem, MaterialCreate, MaterialUpdate, PaginatedResponse
-from app.models.library_models import LibraryMaterial, LibraryCategory, LibraryTag, LibraryView, AdminActivityLog, materials_categories
+from app.models.library_models import LibraryMaterial, LibraryCategory, LibraryView
 from app.api.dependencies import get_current_user_with_subscription, get_current_user
-from app.api.websocket import broadcast_admin_action
 from app.api.push import send_push_notification_sync
 
-
-def log_admin_action(db: Session, user: dict, action: str, entity_type: str, 
-                     entity_id: int = None, entity_title: str = None, 
-                     background_tasks: BackgroundTasks = None):
-    """Записывает действие админа в лог и рассылает через WebSocket"""
-    admin_name = user.get("first_name") or user.get("username") or "Админ"
-    
-    log_entry = AdminActivityLog(
-        admin_id=user.get("telegram_id"),
-        admin_name=admin_name,
-        action=action,
-        entity_type=entity_type,
-        entity_id=entity_id,
-        entity_title=entity_title
-    )
-    db.add(log_entry)
-    db.commit()
-    db.refresh(log_entry)
-    
-    # Рассылаем через WebSocket
-    if background_tasks:
-        background_tasks.add_task(
-            broadcast_admin_action,
-            log_entry.to_dict()
-        )
+# Импорты из сервисного слоя
+from app.services import (
+    MaterialService, 
+    add_cover_url, 
+    check_admin, 
+    log_admin_action,
+    ADMIN_IDS
+)
 
 
 router = APIRouter(prefix="/materials", tags=["Материалы"])
-
-# Список админов
-ADMIN_IDS = [534740911, 44054166]  # Полина и Всеволод
-
-# URL API для генерации ссылок на обложки
-API_BASE_URL = "https://api.librarymomsclub.ru/api"
-
-
-def add_cover_url(item: dict) -> dict:
-    """
-    Добавляет cover_url и убирает base64 из cover_image для оптимизации.
-    Вызывать для каждого материала перед отправкой клиенту.
-    """
-    if item.get("cover_image"):
-        item["cover_url"] = f"{API_BASE_URL}/materials/{item['id']}/cover"
-        item["cover_image"] = None  # Не передаём тяжёлый base64
-    return item
 
 
 @router.get("", response_model=PaginatedResponse)
@@ -77,92 +41,34 @@ def get_materials(
     is_featured: Optional[bool] = Query(None, description="Только избранные"),
     include_drafts: Optional[bool] = Query(False, description="Включить черновики (только для админов)"),
     
-    # Пагинация (без ограничений для библиотеки)
+    # Пагинация
     page: int = Query(1, ge=1, description="Номер страницы"),
-    page_size: int = Query(10000, ge=1, le=10000, description="Размер страницы (без лимита)"),
+    page_size: int = Query(10000, ge=1, le=10000, description="Размер страницы"),
     
     # Сортировка
-    sort: str = Query("created_desc", description="Сортировка: created_desc, created_asc, views_desc, title_asc"),
+    sort: str = Query("created_desc", description="Сортировка"),
     
     # Зависимости
     current_user: dict = Depends(get_current_user_with_subscription),
     db: Session = Depends(get_db)
 ):
-    """
-    Получить список материалов с фильтрацией и пагинацией
-    
-    Требуется активная подписка
-    """
-    # Базовый запрос с eager loading категорий и избранного
-    query = select(LibraryMaterial).options(
-        selectinload(LibraryMaterial.categories),
-        selectinload(LibraryMaterial.favorites)
-    )
-    
-    # Фильтр по публикации (админы могут видеть черновики)
-    if include_drafts and current_user["telegram_id"] in ADMIN_IDS:
-        pass  # Показываем все
-    else:
-        query = query.where(LibraryMaterial.is_published == True)
-    
-    # Применяем фильтры
-    if search:
-        search_filter = or_(
-            LibraryMaterial.title.ilike(f"%{search}%"),
-            LibraryMaterial.description.ilike(f"%{search}%")
-        )
-        query = query.where(search_filter)
-    
-    if category_id:
-        query = query.where(LibraryMaterial.category_id == category_id)
-    
-    if format:
-        query = query.where(LibraryMaterial.format == format)
-    
-    if level:
-        query = query.where(LibraryMaterial.level == level)
-    
-    if topic:
-        query = query.where(LibraryMaterial.topic == topic)
-    
-    if niche:
-        query = query.where(LibraryMaterial.niche == niche)
-    
-    if is_featured is not None:
-        query = query.where(LibraryMaterial.is_featured == is_featured)
-    
-    # Подсчёт общего количества
-    total_query = select(func.count()).select_from(query.subquery())
-    total = db.execute(total_query).scalar()
-    
-    # Сортировка
-    if sort == "created_desc":
-        query = query.order_by(LibraryMaterial.created_at.desc())
-    elif sort == "created_asc":
-        query = query.order_by(LibraryMaterial.created_at.asc())
-    elif sort == "views_desc":
-        query = query.order_by(LibraryMaterial.views.desc())
-    elif sort == "title_asc":
-        query = query.order_by(LibraryMaterial.title.asc())
-    
-    # Пагинация
-    offset = (page - 1) * page_size
-    query = query.offset(offset).limit(page_size)
-    
-    # Выполняем запрос
-    materials = db.execute(query).scalars().all()
-    
-    # Конвертируем в dict и добавляем cover_url
-    items = [add_cover_url(m.to_dict()) for m in materials]
-    
-    # Используем to_dict() для правильной сериализации категорий
-    return PaginatedResponse(
-        items=items,
-        total=total,
+    """Получить список материалов с фильтрацией и пагинацией"""
+    service = MaterialService(db)
+    result = service.get_materials(
+        search=search,
+        category_id=category_id,
+        format=format,
+        level=level,
+        topic=topic,
+        niche=niche,
+        is_featured=is_featured,
+        include_drafts=include_drafts,
+        is_admin=check_admin(current_user),
         page=page,
         page_size=page_size,
-        total_pages=ceil(total / page_size) if total > 0 else 0
+        sort=sort
     )
+    return PaginatedResponse(**result)
 
 
 @router.get("/{material_id}", response_model=Material)
@@ -171,27 +77,14 @@ def get_material(
     current_user: dict = Depends(get_current_user_with_subscription),
     db: Session = Depends(get_db)
 ):
-    """
-    Получить полную информацию о материале
-    
-    Требуется активная подписка
-    """
-    material = db.execute(
-        select(LibraryMaterial)
-        .options(selectinload(LibraryMaterial.categories))
-        .where(
-            LibraryMaterial.id == material_id,
-            LibraryMaterial.is_published == True
-        )
-    ).scalar_one_or_none()
+    """Получить полную информацию о материале"""
+    service = MaterialService(db)
+    material = service.get_material_by_id(material_id)
     
     if not material:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Материал не найден"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Материал не найден")
     
-    return material.to_dict(include_content=True)
+    return material
 
 
 @router.post("/{material_id}/view")
@@ -201,34 +94,12 @@ def record_view(
     current_user: dict = Depends(get_current_user_with_subscription),
     db: Session = Depends(get_db)
 ):
-    """
-    Записать просмотр материала
+    """Записать просмотр материала"""
+    service = MaterialService(db)
+    success = service.record_view(material_id, current_user["user_id"], duration_seconds)
     
-    Требуется активная подписка
-    """
-    # Проверяем, что материал существует
-    material = db.execute(
-        select(LibraryMaterial).where(LibraryMaterial.id == material_id)
-    ).scalar_one_or_none()
-    
-    if not material:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Материал не найден"
-        )
-    
-    # Создаём запись просмотра
-    view = LibraryView(
-        material_id=material_id,
-        user_id=current_user["user_id"],
-        duration_seconds=duration_seconds
-    )
-    db.add(view)
-    
-    # Увеличиваем счётчик просмотров
-    material.views += 1
-    
-    db.commit()
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Материал не найден")
     
     return {"status": "ok", "message": "Просмотр записан"}
 
@@ -239,23 +110,9 @@ def get_featured_materials(
     current_user: dict = Depends(get_current_user_with_subscription),
     db: Session = Depends(get_db)
 ):
-    """
-    Получить список избранных материалов ("Выбор Полины")
-    
-    Требуется активная подписка
-    """
-    materials = db.execute(
-        select(LibraryMaterial)
-        .where(
-            LibraryMaterial.is_published == True,
-            LibraryMaterial.is_featured == True
-        )
-        .order_by(LibraryMaterial.created_at.desc())
-        .limit(limit)
-    ).scalars().all()
-    
-    # Оптимизация: добавляем cover_url, убираем base64
-    return [add_cover_url(m.to_dict()) for m in materials]
+    """Получить список избранных материалов (Выбор Полины)"""
+    service = MaterialService(db)
+    return service.get_featured(limit)
 
 
 @router.get("/popular/list", response_model=List[MaterialListItem])
@@ -264,20 +121,9 @@ def get_popular_materials(
     current_user: dict = Depends(get_current_user_with_subscription),
     db: Session = Depends(get_db)
 ):
-    """
-    Получить список популярных материалов (по просмотрам)
-    
-    Требуется активная подписка
-    """
-    materials = db.execute(
-        select(LibraryMaterial)
-        .where(LibraryMaterial.is_published == True)
-        .order_by(LibraryMaterial.views.desc())
-        .limit(limit)
-    ).scalars().all()
-    
-    # Оптимизация: добавляем cover_url, убираем base64
-    return [add_cover_url(m.to_dict()) for m in materials]
+    """Получить список популярных материалов"""
+    service = MaterialService(db)
+    return service.get_popular(limit)
 
 
 # ============== ИЗБРАННОЕ И ИСТОРИЯ ==============

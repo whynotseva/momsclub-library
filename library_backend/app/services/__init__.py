@@ -1,0 +1,13 @@
+"""
+Сервисный слой приложения.
+Содержит бизнес-логику, отделённую от API роутов.
+"""
+
+from .material_service import (
+    MaterialService,
+    add_cover_url,
+    check_admin,
+    log_admin_action,
+    ADMIN_IDS,
+    API_BASE_URL,
+)
