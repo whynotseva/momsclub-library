@@ -13,3 +13,4 @@ from .material_service import (
 )
 
 from .recommendation_service import RecommendationService
+from .admin_service import AdminService, is_admin

@@ -15,24 +15,21 @@ from app.database import get_db
 from app.api.dependencies import get_current_user
 from app.models.library_models import (
     LibraryCategory, LibraryMaterial, LibraryTag, 
-    LibraryAttachment, LibraryView, LibraryFavorite,
-    materials_tags
+    LibraryAttachment, materials_tags
 )
 from app.schemas.library import (
     MaterialCreate, MaterialUpdate, Material, MaterialListItem,
     CategoryCreate, Category,
     TagCreate, Tag
 )
+from app.services import AdminService, is_admin, ADMIN_IDS
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-
-# Список админов (telegram_id)
-ADMIN_IDS = [534740911, 44054166]
 
 
 def require_admin(current_user: dict = Depends(get_current_user)):
     """Проверка что пользователь — админ"""
-    if current_user.get("telegram_id") not in ADMIN_IDS:
+    if not is_admin(current_user.get("telegram_id")):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Доступ запрещён. Только для администраторов."
@@ -48,43 +45,8 @@ def get_admin_stats(
     admin: dict = Depends(require_admin)
 ):
     """Получить статистику библиотеки"""
-    
-    # Количество материалов
-    materials_count = db.scalar(
-        select(func.count(LibraryMaterial.id))
-    )
-    
-    # Количество опубликованных
-    published_count = db.scalar(
-        select(func.count(LibraryMaterial.id))
-        .where(LibraryMaterial.is_published == True)
-    )
-    
-    # Количество просмотров
-    views_count = db.scalar(
-        select(func.count(LibraryView.id))
-    )
-    
-    # Количество в избранном
-    favorites_count = db.scalar(
-        select(func.count(LibraryFavorite.id))
-    )
-    
-    # Количество категорий
-    categories_count = db.scalar(
-        select(func.count(LibraryCategory.id))
-    )
-    
-    return {
-        "materials": {
-            "total": materials_count or 0,
-            "published": published_count or 0,
-            "drafts": (materials_count or 0) - (published_count or 0)
-        },
-        "views_total": views_count or 0,
-        "favorites_total": favorites_count or 0,
-        "categories_total": categories_count or 0
-    }
+    service = AdminService(db)
+    return service.get_stats()
 
 
 # ==================== МАТЕРИАЛЫ ====================
@@ -100,24 +62,8 @@ def get_all_materials(
     search: Optional[str] = None
 ):
     """Получить все материалы (включая черновики)"""
-    
-    query = select(LibraryMaterial).order_by(LibraryMaterial.created_at.desc())
-    
-    if category_id:
-        query = query.where(LibraryMaterial.category_id == category_id)
-    
-    if is_published is not None:
-        query = query.where(LibraryMaterial.is_published == is_published)
-    
-    if search:
-        query = query.where(LibraryMaterial.title.ilike(f"%{search}%"))
-    
-    query = query.offset((page - 1) * limit).limit(limit)
-    
-    result = db.execute(query)
-    materials = result.scalars().all()
-    
-    return materials
+    service = AdminService(db)
+    return service.get_materials_list(page, limit, category_id, is_published, search)
 
 
 @router.post("/materials", response_model=Material)
