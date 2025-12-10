@@ -12,7 +12,7 @@ import { LOYALTY_BADGES } from '@/lib/constants'
 
 export default function LibraryPage() {
   // Проверяем подписку — если нет, ничего не делаем (SubscriptionGuard редиректит)
-  const { hasSubscription } = useAuthContext()
+  const { hasSubscription, loading: authLoading } = useAuthContext()
   
   // Основные данные из хука (загрузятся только если есть подписка)
   const {
@@ -31,8 +31,8 @@ export default function LibraryPage() {
     toggleFavorite,
   } = useLibraryData()
   
-  // WebSocket для отслеживания онлайн — ТОЛЬКО если есть подписка
-  usePresence(hasSubscription ? 'library' : null)
+  // WebSocket для отслеживания онлайн — ТОЛЬКО если есть подписка И auth загружен
+  usePresence(!authLoading && hasSubscription ? 'library' : null)
   
   // Push уведомления
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, toggle: togglePush, isLoading: pushLoading } = usePushNotifications()
