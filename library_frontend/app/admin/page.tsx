@@ -554,18 +554,18 @@ export default function AdminPage() {
               {adminUser.photo_url ? (
                 <img 
                   src={adminUser.photo_url} 
-                  alt={adminUser.first_name}
+                  alt={adminUser.first_name || 'Admin'}
                   className="w-14 h-14 rounded-2xl object-cover shadow-lg"
                 />
               ) : (
                 <div className="w-14 h-14 bg-gradient-to-br from-[#C9A882] to-[#B08968] rounded-2xl flex items-center justify-center text-2xl shadow-lg text-white font-bold">
-                  {adminUser.first_name.charAt(0)}
+                  {adminUser.first_name?.charAt(0) || '?'}
                 </div>
               )}
               <div>
                 <p className="text-xs text-[#B08968] font-medium uppercase tracking-wide mb-0.5">Панель администратора</p>
                 <h2 className="text-xl font-bold text-[#5D4E3A]">
-                  Привет, {adminUser.first_name}! 👋
+                  Привет, {adminUser.first_name || 'Админ'}! 👋
                 </h2>
                 {adminUser.admin_group && ADMIN_GROUP_INFO[adminUser.admin_group] && (
                   <p className="text-sm text-[#8B8279] flex items-center gap-1.5 mt-0.5">

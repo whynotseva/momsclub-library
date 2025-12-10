@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 
 interface OnlineUser {
   telegram_id: number
-  first_name: string
+  first_name?: string
   username?: string
   photo_url?: string
   admin_group?: string
@@ -21,7 +21,7 @@ export interface Activity {
   created_at: string
   user: {
     telegram_id: number
-    first_name: string
+    first_name?: string
     username?: string
     photo_url?: string
   }

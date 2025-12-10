@@ -84,7 +84,7 @@ api.interceptors.response.use(
 
 export interface User {
   telegram_id: number;
-  first_name: string;
+  first_name?: string;
   username?: string;
   has_active_subscription: boolean;
   subscription_end?: string;
@@ -148,7 +148,7 @@ export interface PaginatedResponse<T> {
 
 export const authAPI = {
   // Авторизация через Telegram
-  telegramLogin: (authData: { id: number; first_name: string; last_name?: string; username?: string; photo_url?: string; auth_date: number; hash: string }) => 
+  telegramLogin: (authData: { id: number; first_name?: string; last_name?: string; username?: string; photo_url?: string; auth_date: number; hash: string }) => 
     api.post<{ access_token: string; user: User }>('/auth/telegram', authData),
   
   // Текущий пользователь

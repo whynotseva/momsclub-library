@@ -72,7 +72,7 @@ export interface UserDisplay {
 export interface UserAPI {
   id: number
   telegram_id: number
-  first_name: string
+  first_name?: string
   username?: string
   photo_url?: string
   loyalty_level?: LoyaltyLevel
@@ -109,7 +109,7 @@ export interface Activity {
   created_at: string
   user: {
     telegram_id: number
-    first_name: string
+    first_name?: string
     username?: string
     photo_url?: string
   }
@@ -136,7 +136,7 @@ export interface AdminAction {
 /** Админ пользователь */
 export interface AdminUser {
   telegram_id: number
-  first_name: string
+  first_name?: string
   username?: string
   admin_group?: string
   photo_url?: string

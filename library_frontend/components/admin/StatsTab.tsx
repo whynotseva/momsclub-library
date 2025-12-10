@@ -6,7 +6,7 @@ import { Avatar } from '@/components/shared'
 // Типы
 interface OnlineUser {
   telegram_id: number
-  first_name: string
+  first_name?: string
   username?: string
   admin_group?: string
   photo_url?: string
@@ -24,7 +24,7 @@ interface Activity {
   created_at: string
   user: {
     telegram_id: number
-    first_name: string
+    first_name?: string
     username?: string
     photo_url?: string
   }
@@ -38,7 +38,7 @@ interface Activity {
 interface UserWithPush {
   id: number
   telegram_id: number
-  first_name: string
+  first_name?: string
   username?: string
   photo_url?: string
   views_count: number

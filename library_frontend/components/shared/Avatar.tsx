@@ -4,7 +4,7 @@ import { memo, useState } from 'react'
 
 interface AvatarProps {
   src?: string | null
-  name: string
+  name?: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
   onClick?: () => void
