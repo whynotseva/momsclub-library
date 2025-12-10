@@ -9,7 +9,7 @@ from sqlalchemy import text
 
 from app.database import get_db
 from app.config import settings
-from app.schemas import TelegramAuthData, TokenResponse, UserInfo, SubscriptionStatus
+from app.schemas import TelegramAuthData, TokenResponse, UserInfo, SubscriptionStatus, LoyaltyInfo
 from app.utils.auth import verify_telegram_auth, create_access_token
 from app.api.dependencies import get_current_user, get_current_user_with_subscription
 
@@ -250,4 +250,85 @@ def check_subscription(
         has_active_subscription=True,
         subscription_end=end_date_str,
         days_left=days_left
+    )
+
+
+# Пороги уровней лояльности (дни)
+SILVER_THRESHOLD = 90
+GOLD_THRESHOLD = 180
+PLATINUM_THRESHOLD = 365
+
+
+@router.get("/loyalty", response_model=LoyaltyInfo)
+def get_loyalty_info(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Получить информацию о лояльности пользователя
+    """
+    # Получаем данные о лояльности из БД
+    user_result = db.execute(
+        text("""
+        SELECT 
+            first_payment_date,
+            current_loyalty_level,
+            one_time_discount_percent,
+            lifetime_discount_percent
+        FROM users 
+        WHERE id = :user_id
+        """),
+        {"user_id": current_user["user_id"]}
+    ).fetchone()
+    
+    if not user_result:
+        return LoyaltyInfo()
+    
+    first_payment_date, current_level, one_time_discount, lifetime_discount = user_result
+    
+    # Считаем дни в клубе
+    days_in_club = 0
+    if first_payment_date:
+        try:
+            if isinstance(first_payment_date, str):
+                first_date = datetime.fromisoformat(first_payment_date)
+            else:
+                first_date = first_payment_date
+            days_in_club = (datetime.now() - first_date).days
+        except:
+            pass
+    
+    current_level = current_level or "none"
+    
+    # Определяем следующий уровень и прогресс
+    if current_level == "none":
+        next_level = "silver"
+        days_to_next = max(0, SILVER_THRESHOLD - days_in_club)
+        progress = min(100, int((days_in_club / SILVER_THRESHOLD) * 100)) if SILVER_THRESHOLD > 0 else 0
+    elif current_level == "silver":
+        next_level = "gold"
+        days_to_next = max(0, GOLD_THRESHOLD - days_in_club)
+        progress = min(100, int(((days_in_club - SILVER_THRESHOLD) / (GOLD_THRESHOLD - SILVER_THRESHOLD)) * 100))
+    elif current_level == "gold":
+        next_level = "platinum"
+        days_to_next = max(0, PLATINUM_THRESHOLD - days_in_club)
+        progress = min(100, int(((days_in_club - GOLD_THRESHOLD) / (PLATINUM_THRESHOLD - GOLD_THRESHOLD)) * 100))
+    else:  # platinum
+        next_level = None
+        days_to_next = None
+        progress = 100
+    
+    # Эффективная скидка (приоритет: lifetime > one_time)
+    discount = lifetime_discount or one_time_discount or 0
+    
+    return LoyaltyInfo(
+        current_level=current_level,
+        days_in_club=days_in_club,
+        next_level=next_level,
+        days_to_next_level=days_to_next,
+        progress_percent=max(0, progress),
+        discount_percent=discount,
+        silver_days=SILVER_THRESHOLD,
+        gold_days=GOLD_THRESHOLD,
+        platinum_days=PLATINUM_THRESHOLD
     )

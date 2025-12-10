@@ -2,6 +2,7 @@
 
 import { useAuthContext } from '@/contexts/AuthContext'
 import { LoadingSpinner } from '@/components/shared'
+import { LoyaltyCard } from '@/components/profile'
 import Link from 'next/link'
 
 export default function ProfilePage() {
@@ -153,38 +154,37 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Скоро */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg shadow-[#C9A882]/10 border border-[#E8D4BA]/40 p-6 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5" />
-            <div className="relative">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
-                  <span className="text-white text-lg">✨</span>
+          {/* Лояльность — показываем только если есть подписка */}
+          {hasSubscription ? (
+            <LoyaltyCard />
+          ) : (
+            <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg shadow-[#C9A882]/10 border border-[#E8D4BA]/40 p-6 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-lg">✨</span>
+                  </div>
+                  <h2 className="text-lg font-semibold text-[#2D2A26]">Преимущества подписки</h2>
                 </div>
-                <h2 className="text-lg font-semibold text-[#2D2A26]">Скоро</h2>
-                <span className="text-xs px-2 py-1 bg-purple-100 text-purple-600 rounded-full font-medium">Coming soon</span>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-sm text-[#5D4E3A]">
-                  <span className="text-lg">💎</span>
-                  <span>Программа лояльности</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-[#5D4E3A]">
-                  <span className="text-lg">👥</span>
-                  <span>Реферальная программа</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-[#5D4E3A]">
-                  <span className="text-lg">📋</span>
-                  <span>История платежей</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-[#5D4E3A]">
-                  <span className="text-lg">⚙️</span>
-                  <span>Настройки аккаунта</span>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 text-sm text-[#5D4E3A]">
+                    <span className="text-lg">💎</span>
+                    <span>Программа лояльности</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-[#5D4E3A]">
+                    <span className="text-lg">👥</span>
+                    <span>Реферальная программа</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-[#5D4E3A]">
+                    <span className="text-lg">📚</span>
+                    <span>100+ материалов</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Support */}

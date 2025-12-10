@@ -44,3 +44,17 @@ class SubscriptionStatus(BaseModel):
     has_active_subscription: bool
     subscription_end: Optional[str] = None
     days_left: Optional[int] = None
+
+
+class LoyaltyInfo(BaseModel):
+    """Информация о лояльности пользователя"""
+    current_level: str = "none"  # none, silver, gold, platinum
+    days_in_club: int = 0
+    next_level: Optional[str] = None
+    days_to_next_level: Optional[int] = None
+    progress_percent: int = 0
+    discount_percent: int = 0
+    # Пороги уровней (для отображения)
+    silver_days: int = 90
+    gold_days: int = 180
+    platinum_days: int = 365
