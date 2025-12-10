@@ -5,16 +5,13 @@ import { usePresence } from '@/hooks/usePresence'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { useLibraryData } from '@/hooks/useLibraryData'
 import { useScrollVisibility } from '@/hooks/useScrollVisibility'
-import { useAuthContext } from '@/contexts/AuthContext'
 import { LoadingSpinner } from '@/components/shared'
 import { QuoteOfDay, MobileNav, PushPromoModal, CategoryFilter, SubscriptionCard, MaterialCard, Header, FeaturedSection, WelcomeCard, SearchBar } from '@/components/library'
 import { LOYALTY_BADGES } from '@/lib/constants'
 
 export default function LibraryPage() {
-  // Проверяем подписку — если нет, ничего не делаем (SubscriptionGuard редиректит)
-  const { hasSubscription, loading: authLoading } = useAuthContext()
-  
-  // Основные данные из хука (загрузятся только если есть подписка)
+  // Основные данные из хука
+  // SubscriptionGuard уже редиректит без подписки, поэтому тут можем загружать
   const {
     loading,
     user,
@@ -29,10 +26,11 @@ export default function LibraryPage() {
     markAsRead,
     openMaterial,
     toggleFavorite,
+    hasSubscription,
   } = useLibraryData()
   
-  // WebSocket для отслеживания онлайн — ТОЛЬКО если есть подписка И auth загружен
-  usePresence(!authLoading && hasSubscription ? 'library' : null)
+  // WebSocket для отслеживания онлайн — включается только при активной подписке
+  usePresence('library', { enabled: hasSubscription })
   
   // Push уведомления
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, toggle: togglePush, isLoading: pushLoading } = usePushNotifications()

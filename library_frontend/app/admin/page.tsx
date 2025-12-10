@@ -37,7 +37,10 @@ export default function AdminPage() {
   const handleAdminAction = (action: WsAdminAction) => addAdminAction(action as AdminAction)
   
   // WebSocket для отслеживания онлайн пользователей
-  const { onlineUsers, isConnected, libraryCount, adminCount } = usePresence('admin', handleNewActivity, handleAdminAction)
+  const { onlineUsers, isConnected, libraryCount, adminCount } = usePresence('admin', {
+    onNewActivity: handleNewActivity,
+    onAdminAction: handleAdminAction,
+  })
   
   const [showMaterialForm, setShowMaterialForm] = useState(false)
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null)

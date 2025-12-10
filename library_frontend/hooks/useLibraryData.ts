@@ -15,6 +15,7 @@ export function useLibraryData() {
   
   // Состояния
   const [loading, setLoading] = useState(true)
+  const [hasSubscription, setHasSubscription] = useState(false)
   const [user, setUser] = useState(DEFAULT_USER)
   const [isAdmin, setIsAdmin] = useState(false)
   const [materials, setMaterials] = useState<Material[]>([])
@@ -68,11 +69,12 @@ export function useLibraryData() {
       }
 
       // Загружаем данные подписки из API
-      let hasSubscription = false
+      let hasSub = false
       try {
         const response = await api.get('/auth/check-subscription')
         const subData = response.data
-        hasSubscription = subData.has_active_subscription
+        hasSub = subData.has_active_subscription
+        setHasSubscription(hasSub)
         
         setUser(prev => ({
           ...prev,
@@ -80,9 +82,9 @@ export function useLibraryData() {
         }))
         
         // Если нет подписки — не загружаем данные библиотеки
-        if (!hasSubscription) {
+        // SubscriptionGuard сам редиректит на /profile
+        if (!hasSub) {
           setLoading(false)
-          router.push('/profile')
           return
         }
       } catch (error) {
@@ -245,6 +247,7 @@ export function useLibraryData() {
   return {
     // Состояния
     loading,
+    hasSubscription,
     user,
     isAdmin,
     materials,

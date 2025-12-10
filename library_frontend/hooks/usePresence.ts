@@ -52,11 +52,20 @@ interface PresenceData {
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'wss://api.librarymomsclub.ru'
 
+/**
+ * Хук для отслеживания онлайн пользователей через WebSocket
+ * @param page - страница для подключения ('library' | 'admin')
+ * @param options - опции: enabled (по умолчанию true), callbacks
+ */
 export function usePresence(
-  page: 'library' | 'admin' | null, 
-  onNewActivity?: (activity: Activity) => void,
-  onAdminAction?: (action: AdminAction) => void
+  page: 'library' | 'admin', 
+  options?: {
+    enabled?: boolean
+    onNewActivity?: (activity: Activity) => void
+    onAdminAction?: (action: AdminAction) => void
+  }
 ) {
+  const { enabled = true, onNewActivity, onAdminAction } = options || {}
   const [onlineUsers, setOnlineUsers] = useState<OnlineUsers>({ library: [], admin: [] })
   const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
@@ -75,11 +84,8 @@ export function usePresence(
   }, [onAdminAction])
 
   const connect = useCallback(() => {
-    // Не подключаемся если page === null (нет подписки)
-    if (!page) return
-    
-    // Не подключаемся если мы на странице /profile (нет смысла)
-    if (typeof window !== 'undefined' && window.location.pathname === '/profile') return
+    // Не подключаемся если disabled
+    if (!enabled) return
     
     const token = localStorage.getItem('access_token')
     if (!token) return
@@ -146,7 +152,7 @@ export function usePresence(
     } catch (e) {
       console.error('Failed to create WebSocket:', e)
     }
-  }, [page])
+  }, [page, enabled])
 
   useEffect(() => {
     // Небольшая задержка для загрузки токена
