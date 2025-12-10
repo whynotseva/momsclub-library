@@ -68,16 +68,23 @@ export function useLibraryData() {
       }
 
       // Загружаем данные подписки из API
+      let hasSubscription = false
       try {
         const response = await api.get('/auth/check-subscription')
         const subData = response.data
-        
-        // НЕ блокируем здесь — SubscriptionGuard сам редиректит на /profile
+        hasSubscription = subData.has_active_subscription
         
         setUser(prev => ({
           ...prev,
           subscriptionDaysLeft: subData.days_left || 0,
         }))
+        
+        // Если нет подписки — не загружаем данные библиотеки
+        if (!hasSubscription) {
+          setLoading(false)
+          router.push('/profile')
+          return
+        }
       } catch (error) {
         console.error('Error loading subscription:', error)
         // При ошибке авторизации — кикаем
@@ -87,7 +94,7 @@ export function useLibraryData() {
         return
       }
 
-      // Загружаем категории
+      // Загружаем категории (только если есть подписка)
       try {
         const catResponse = await api.get('/categories')
         setApiCategories(catResponse.data)

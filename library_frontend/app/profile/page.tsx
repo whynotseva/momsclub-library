@@ -25,7 +25,7 @@ export default function ProfilePage() {
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#E8D4BA]/30">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           {/* Logo with Santa */}
-          <Link href={hasSubscription ? "/" : "/profile"} className="group relative">
+          <Link href={hasSubscription ? "/" : "/profile"} prefetch={false} className="group relative">
             <img 
               src="/logolibrary.svg" 
               alt="LibriMomsClub" 
@@ -38,6 +38,7 @@ export default function ProfilePage() {
             {hasSubscription && (
               <Link 
                 href="/"
+                prefetch={false}
                 className="text-sm font-medium text-[#B08968] hover:text-[#8B7355] transition-colors flex items-center gap-1"
               >
                 <span>📚</span> В библиотеку
