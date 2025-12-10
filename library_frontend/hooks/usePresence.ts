@@ -53,7 +53,7 @@ interface PresenceData {
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'wss://api.librarymomsclub.ru'
 
 export function usePresence(
-  page: 'library' | 'admin', 
+  page: 'library' | 'admin' | null, 
   onNewActivity?: (activity: Activity) => void,
   onAdminAction?: (action: AdminAction) => void
 ) {
@@ -75,6 +75,9 @@ export function usePresence(
   }, [onAdminAction])
 
   const connect = useCallback(() => {
+    // Не подключаемся если page === null (нет подписки)
+    if (!page) return
+    
     const token = localStorage.getItem('access_token')
     if (!token) return
 

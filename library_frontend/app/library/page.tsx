@@ -5,12 +5,16 @@ import { usePresence } from '@/hooks/usePresence'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { useLibraryData } from '@/hooks/useLibraryData'
 import { useScrollVisibility } from '@/hooks/useScrollVisibility'
+import { useAuthContext } from '@/contexts/AuthContext'
 import { LoadingSpinner } from '@/components/shared'
 import { QuoteOfDay, MobileNav, PushPromoModal, CategoryFilter, SubscriptionCard, MaterialCard, Header, FeaturedSection, WelcomeCard, SearchBar } from '@/components/library'
 import { LOYALTY_BADGES } from '@/lib/constants'
 
 export default function LibraryPage() {
-  // Основные данные из хука
+  // Проверяем подписку — если нет, ничего не делаем (SubscriptionGuard редиректит)
+  const { hasSubscription } = useAuthContext()
+  
+  // Основные данные из хука (загрузятся только если есть подписка)
   const {
     loading,
     user,
@@ -27,8 +31,8 @@ export default function LibraryPage() {
     toggleFavorite,
   } = useLibraryData()
   
-  // WebSocket для отслеживания онлайн пользователей
-  usePresence('library')
+  // WebSocket для отслеживания онлайн — ТОЛЬКО если есть подписка
+  usePresence(hasSubscription ? 'library' : null)
   
   // Push уведомления
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, toggle: togglePush, isLoading: pushLoading } = usePushNotifications()
