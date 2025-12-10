@@ -6,6 +6,24 @@
 
 ---
 
+## ⚠️ Деплой фронтенда (ВАЖНО!)
+
+После изменений в `library_frontend` всегда делать:
+
+```bash
+# 1. Копируем файлы и билдим
+scp файлы root@109.73.199.102:/root/home/library_frontend/...
+ssh root@109.73.199.102 "cd /root/home/library_frontend && rm -rf .next && npm run build"
+
+# 2. Перезапускаем Next.js + nginx (обязательно оба!)
+ssh root@109.73.199.102 "kill \$(lsof -t -i:3000); nohup npm start > /tmp/next.log 2>&1 &"
+ssh root@109.73.199.102 "systemctl restart nginx"
+```
+
+**Без перезапуска nginx** — браузер получает закэшированный HTML со ссылками на старые chunks → белый экран.
+
+---
+
 ## Цели
 
 1. Создать полноценный личный кабинет пользователя на сайте/PWA
