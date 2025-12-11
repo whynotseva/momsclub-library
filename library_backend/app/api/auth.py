@@ -540,7 +540,7 @@ def get_user_settings(
     """Получить настройки пользователя (ДР, автопродление)"""
     result = db.execute(
         text("""
-            SELECT birthday, is_recurring_active, yookassa_payment_method_id
+            SELECT birthday, is_recurring_active, yookassa_payment_method_id, autopay_streak
             FROM users 
             WHERE id = :user_id
         """),
@@ -550,7 +550,7 @@ def get_user_settings(
     if not result:
         return UserSettings()
     
-    birthday, is_recurring, payment_method_id = result
+    birthday, is_recurring, payment_method_id, autopay_streak = result
     
     # Форматируем дату рождения
     birthday_str = None
@@ -563,7 +563,8 @@ def get_user_settings(
     return UserSettings(
         birthday=birthday_str,
         is_recurring_active=bool(is_recurring),
-        has_saved_card=bool(payment_method_id)
+        has_saved_card=bool(payment_method_id),
+        autopay_streak=autopay_streak or 0
     )
 
 

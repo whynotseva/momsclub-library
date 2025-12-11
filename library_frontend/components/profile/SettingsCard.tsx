@@ -8,6 +8,7 @@ interface UserSettings {
   birthday?: string
   is_recurring_active: boolean
   has_saved_card?: boolean
+  autopay_streak?: number
 }
 
 export function SettingsCard() {
@@ -18,13 +19,14 @@ export function SettingsCard() {
   const [birthdayInput, setBirthdayInput] = useState('')
   const [saving, setSaving] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showStreakWarning, setShowStreakWarning] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
   const [cancelling, setCancelling] = useState(false)
   const [enabling, setEnabling] = useState(false)
 
   // Блокировка скролла при открытии модалки
   useEffect(() => {
-    if (showCancelModal) {
+    if (showCancelModal || showStreakWarning) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
@@ -32,7 +34,26 @@ export function SettingsCard() {
     return () => {
       document.body.style.overflow = ''
     }
-  }, [showCancelModal])
+  }, [showCancelModal, showStreakWarning])
+
+  // Обработка нажатия кнопки "Отключить"
+  const handleCancelClick = () => {
+    const streak = settings?.autopay_streak || 0
+    if (streak > 0) {
+      setShowStreakWarning(true)
+    } else {
+      setShowCancelModal(true)
+    }
+  }
+
+  // Расчёт бонусных дней (логика из бота)
+  const getNextBonusDays = (streak: number): number => {
+    if (streak >= 11) return 7
+    if (streak >= 8) return 5
+    if (streak >= 5) return 3
+    if (streak >= 2) return 1
+    return 1
+  }
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -239,7 +260,7 @@ export function SettingsCard() {
             </div>
             {settings?.is_recurring_active ? (
               <button
-                onClick={() => setShowCancelModal(true)}
+                onClick={handleCancelClick}
                 className="px-3 py-1 text-xs text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
               >
                 Отключить
@@ -304,6 +325,43 @@ export function SettingsCard() {
                 className="px-4 py-2 border border-[#E8D4BA] text-[#8B8279] rounded-lg hover:bg-[#FAF6F1] transition-colors"
               >
                 Отмена
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Streak Warning Modal - Portal to body */}
+      {showStreakWarning && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 className="text-lg font-semibold text-[#2D2A26] mb-2">
+              ⚠️ Подожди!
+            </h3>
+            <div className="text-sm text-[#5D4E3A] mb-4 space-y-2">
+              <p>🔥 У тебя уже <b>{settings?.autopay_streak}</b> автопродлений подряд!</p>
+              <p>🎁 В следующем месяце ты получишь <b>+{getNextBonusDays(settings?.autopay_streak || 0)} дней</b> бонусом!</p>
+              <p className="text-[#8B8279]">
+                Если отключишь сейчас — стрик сбросится и придётся начинать сначала 😢
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowStreakWarning(false)
+                  setShowCancelModal(true)
+                }}
+                className="flex-1 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+              >
+                ❌ Всё равно отключить
+              </button>
+              <button
+                onClick={() => setShowStreakWarning(false)}
+                className="flex-1 py-2 bg-[#B08968] text-white rounded-lg hover:bg-[#8B7355] transition-colors text-sm"
+              >
+                💕 Оставить
               </button>
             </div>
           </div>
