@@ -654,15 +654,21 @@ def request_cancel_autorenewal(
     )
     db.commit()
     
-    # Получаем ID созданной заявки
+    # Получаем ID созданной заявки (последняя заявка этого пользователя)
     request_id_result = db.execute(
-        text("SELECT last_insert_rowid()")
+        text("""
+            SELECT id FROM autorenewal_cancellation_requests 
+            WHERE user_id = :user_id 
+            ORDER BY id DESC LIMIT 1
+        """),
+        {"user_id": user_id}
     ).fetchone()
     request_id = request_id_result[0] if request_id_result else 0
     
     # Отправляем уведомление админам через Telegram Bot API
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-    admin_ids = [44054166, 5610859303]  # ID админов
+    admin_ids_str = os.getenv("ADMIN_ID", "534740911,44054166")
+    admin_ids = [int(x.strip()) for x in admin_ids_str.split(",") if x.strip()]
     
     if bot_token:
         user_info = f"{first_name or 'Пользователь'} (@{username})" if username else f"{first_name or 'Пользователь'} (ID: {telegram_id})"
