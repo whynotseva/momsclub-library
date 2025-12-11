@@ -9,7 +9,7 @@ from sqlalchemy import text
 
 from app.database import get_db
 from app.config import settings
-from app.schemas import TelegramAuthData, TokenResponse, UserInfo, SubscriptionStatus, LoyaltyInfo
+from app.schemas import TelegramAuthData, TokenResponse, UserInfo, SubscriptionStatus, LoyaltyInfo, ReferralInfo
 from app.utils.auth import verify_telegram_auth, create_access_token
 from app.api.dependencies import get_current_user, get_current_user_with_subscription
 
@@ -331,4 +331,78 @@ def get_loyalty_info(
         silver_days=SILVER_THRESHOLD,
         gold_days=GOLD_THRESHOLD,
         platinum_days=PLATINUM_THRESHOLD
+    )
+
+
+# Бонусы рефералов по уровню лояльности
+REFERRAL_BONUS_BY_LEVEL = {
+    'none': {'percent': 10, 'days': 7},
+    'silver': {'percent': 15, 'days': 7},
+    'gold': {'percent': 20, 'days': 7},
+    'platinum': {'percent': 30, 'days': 7},
+}
+
+
+@router.get("/referral", response_model=ReferralInfo)
+def get_referral_info(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Получить информацию о реферальной программе пользователя
+    """
+    telegram_id = current_user["telegram_id"]
+    
+    # Получаем данные пользователя
+    user_result = db.execute(
+        text("""
+            SELECT referral_code, referral_balance, total_referrals_paid, 
+                   total_earned_referral, current_loyalty_level
+            FROM users 
+            WHERE telegram_id = :tg_id
+        """),
+        {"tg_id": telegram_id}
+    ).fetchone()
+    
+    if not user_result:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    referral_code, balance, paid_referrals, total_earned, loyalty_level = user_result
+    
+    # Если нет реферального кода — генерируем
+    if not referral_code:
+        import random
+        import string
+        referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        db.execute(
+            text("UPDATE users SET referral_code = :code WHERE telegram_id = :tg_id"),
+            {"code": referral_code, "tg_id": telegram_id}
+        )
+        db.commit()
+    
+    # Считаем всего приглашённых (по referrer_id)
+    total_referrals_result = db.execute(
+        text("""
+            SELECT COUNT(*) FROM users 
+            WHERE referrer_id = (SELECT id FROM users WHERE telegram_id = :tg_id)
+        """),
+        {"tg_id": telegram_id}
+    ).fetchone()
+    total_referrals = total_referrals_result[0] if total_referrals_result else 0
+    
+    # Бонусы по уровню лояльности
+    bonus = REFERRAL_BONUS_BY_LEVEL.get(loyalty_level or 'none', REFERRAL_BONUS_BY_LEVEL['none'])
+    
+    # Формируем ссылку
+    referral_link = f"https://t.me/momsclubsubscribe_bot?start=ref_{referral_code}"
+    
+    return ReferralInfo(
+        referral_code=referral_code,
+        referral_link=referral_link,
+        referral_balance=balance or 0,
+        total_referrals=total_referrals,
+        paid_referrals=paid_referrals or 0,
+        total_earned=total_earned or 0,
+        bonus_percent=bonus['percent'],
+        bonus_days=bonus['days']
     )

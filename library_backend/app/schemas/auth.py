@@ -58,3 +58,16 @@ class LoyaltyInfo(BaseModel):
     silver_days: int = 90
     gold_days: int = 180
     platinum_days: int = 365
+
+
+class ReferralInfo(BaseModel):
+    """Информация о реферальной программе пользователя"""
+    referral_code: str  # Уникальный код для приглашения
+    referral_link: str  # Полная ссылка для приглашения
+    referral_balance: int = 0  # Баланс в копейках
+    total_referrals: int = 0  # Всего приглашённых
+    paid_referrals: int = 0  # Оплативших рефералов
+    total_earned: int = 0  # Всего заработано в копейках
+    # Бонусы по уровню лояльности
+    bonus_percent: int = 10  # Процент от оплаты реферала
+    bonus_days: int = 7  # Или дней к подписке

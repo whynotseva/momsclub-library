@@ -1,6 +1,6 @@
 """Pydantic схемы"""
 
-from .auth import TelegramAuthData, TokenResponse, UserInfo, SubscriptionStatus, LoyaltyInfo
+from .auth import TelegramAuthData, TokenResponse, UserInfo, SubscriptionStatus, LoyaltyInfo, ReferralInfo
 from .library import (
     Category, CategoryCreate, CategoryUpdate,
     Tag, TagCreate,
@@ -18,6 +18,7 @@ __all__ = [
     'UserInfo',
     'SubscriptionStatus',
     'LoyaltyInfo',
+    'ReferralInfo',
     
     # Library
     'Category',
