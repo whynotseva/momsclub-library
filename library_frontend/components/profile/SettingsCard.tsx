@@ -46,13 +46,15 @@ export function SettingsCard() {
     }
   }
 
-  // Расчёт бонусных дней (логика из бота)
+  // Расчёт бонусных дней для СЛЕДУЮЩЕГО стрика (логика из бота)
   const getNextBonusDays = (streak: number): number => {
-    if (streak >= 11) return 7
-    if (streak >= 8) return 5
-    if (streak >= 5) return 3
-    if (streak >= 2) return 1
-    return 1
+    const nextStreak = streak + 1
+    if (nextStreak <= 0) return 0
+    if (nextStreak === 1) return 3
+    if (nextStreak === 2) return 5
+    if (nextStreak === 3) return 7
+    if (nextStreak === 4 || nextStreak === 5) return 8
+    return 10 // 6+
   }
 
   useEffect(() => {
