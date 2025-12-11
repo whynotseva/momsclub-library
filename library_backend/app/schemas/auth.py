@@ -62,12 +62,29 @@ class LoyaltyInfo(BaseModel):
 
 class ReferralInfo(BaseModel):
     """Информация о реферальной программе пользователя"""
-    referral_code: str  # Уникальный код для приглашения
-    referral_link: str  # Полная ссылка для приглашения
-    referral_balance: int = 0  # Баланс в копейках
-    total_referrals: int = 0  # Всего приглашённых
-    paid_referrals: int = 0  # Оплативших рефералов
-    total_earned: int = 0  # Всего заработано в копейках
-    # Бонусы по уровню лояльности
-    bonus_percent: int = 10  # Процент от оплаты реферала
-    bonus_days: int = 7  # Или дней к подписке
+    referral_code: str
+    referral_link: str
+    referral_balance: int = 0
+    total_referrals: int = 0
+    paid_referrals: int = 0
+    total_earned: int = 0
+    bonus_percent: int = 10
+    bonus_days: int = 7
+
+
+class PaymentItem(BaseModel):
+    """Один платёж в истории"""
+    id: int
+    amount: int
+    status: str
+    payment_method: Optional[str] = None
+    details: Optional[str] = None
+    days: Optional[int] = None
+    created_at: str
+
+
+class PaymentHistory(BaseModel):
+    """История платежей пользователя"""
+    payments: list[PaymentItem] = []
+    total_paid: int = 0
+    total_count: int = 0

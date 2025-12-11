@@ -9,7 +9,7 @@ from sqlalchemy import text
 
 from app.database import get_db
 from app.config import settings
-from app.schemas import TelegramAuthData, TokenResponse, UserInfo, SubscriptionStatus, LoyaltyInfo, ReferralInfo
+from app.schemas import TelegramAuthData, TokenResponse, UserInfo, SubscriptionStatus, LoyaltyInfo, ReferralInfo, PaymentItem, PaymentHistory
 from app.utils.auth import verify_telegram_auth, create_access_token
 from app.api.dependencies import get_current_user, get_current_user_with_subscription
 
@@ -446,4 +446,54 @@ def get_referral_info(
         total_earned=total_earned or 0,
         bonus_percent=bonus['percent'],
         bonus_days=bonus['days']
+    )
+
+
+@router.get("/payments", response_model=PaymentHistory)
+def get_payment_history(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Получить историю платежей пользователя"""
+    # Получаем платежи
+    payments_result = db.execute(
+        text("""
+            SELECT id, amount, status, payment_method, details, days, created_at
+            FROM payment_logs 
+            WHERE user_id = :user_id
+            ORDER BY created_at DESC
+            LIMIT 20
+        """),
+        {"user_id": current_user["user_id"]}
+    ).fetchall()
+    
+    payments = []
+    total_paid = 0
+    
+    for row in payments_result:
+        pid, amount, status, method, details, days, created_at = row
+        
+        # Форматируем дату
+        if isinstance(created_at, str):
+            date_str = created_at[:19]
+        else:
+            date_str = created_at.strftime("%Y-%m-%d %H:%M:%S") if created_at else ""
+        
+        payments.append(PaymentItem(
+            id=pid,
+            amount=amount or 0,
+            status=status or "unknown",
+            payment_method=method,
+            details=details,
+            days=days,
+            created_at=date_str
+        ))
+        
+        if status == "success":
+            total_paid += amount or 0
+    
+    return PaymentHistory(
+        payments=payments,
+        total_paid=total_paid,
+        total_count=len(payments)
     )
