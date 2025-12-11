@@ -286,17 +286,58 @@ def get_loyalty_info(
     
     first_payment_date, current_level, one_time_discount, lifetime_discount = user_result
     
-    # Считаем дни в клубе
+    # Считаем дни в клубе как сумму дней активных подписок (как в боте)
     days_in_club = 0
     if first_payment_date:
-        try:
-            if isinstance(first_payment_date, str):
-                first_date = datetime.fromisoformat(first_payment_date)
-            else:
-                first_date = first_payment_date
-            days_in_club = (datetime.now() - first_date).days
-        except:
-            pass
+        # Получаем все подписки пользователя
+        subscriptions = db.execute(
+            text("""
+                SELECT start_date, end_date FROM subscriptions 
+                WHERE user_id = :user_id 
+                ORDER BY start_date
+            """),
+            {"user_id": current_user["user_id"]}
+        ).fetchall()
+        
+        now = datetime.now()
+        periods = []
+        
+        for sub in subscriptions:
+            start_date, end_date = sub
+            try:
+                if isinstance(start_date, str):
+                    start = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('+')[0])
+                else:
+                    start = start_date
+                if isinstance(end_date, str):
+                    end = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('+')[0])
+                else:
+                    end = end_date
+                
+                # Считаем только до текущего момента
+                end_for_calc = min(end, now)
+                if start <= end_for_calc and start <= now:
+                    periods.append((start, end_for_calc))
+            except:
+                pass
+        
+        if periods:
+            # Сортируем и объединяем перекрывающиеся периоды
+            periods.sort(key=lambda x: x[0])
+            merged = []
+            current_start, current_end = periods[0]
+            
+            for start, end in periods[1:]:
+                if start <= current_end:
+                    current_end = max(current_end, end)
+                else:
+                    merged.append((current_start, current_end))
+                    current_start, current_end = start, end
+            merged.append((current_start, current_end))
+            
+            # Суммируем дни
+            for start, end in merged:
+                days_in_club += max(0, (end - start).days)
     
     current_level = current_level or "none"
     

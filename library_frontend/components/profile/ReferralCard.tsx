@@ -49,8 +49,8 @@ export function ReferralCard() {
     }
   }
 
-  const formatMoney = (kopecks: number) => {
-    return (kopecks / 100).toLocaleString('ru-RU') + ' ₽'
+  const formatMoney = (rubles: number) => {
+    return rubles.toLocaleString('ru-RU') + ' ₽'
   }
 
   if (loading) {
