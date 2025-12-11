@@ -540,7 +540,7 @@ def get_user_settings(
     """Получить настройки пользователя (ДР, автопродление)"""
     result = db.execute(
         text("""
-            SELECT birthday, is_recurring_active
+            SELECT birthday, is_recurring_active, yookassa_payment_method_id
             FROM users 
             WHERE id = :user_id
         """),
@@ -550,7 +550,7 @@ def get_user_settings(
     if not result:
         return UserSettings()
     
-    birthday, is_recurring = result
+    birthday, is_recurring, payment_method_id = result
     
     # Форматируем дату рождения
     birthday_str = None
@@ -562,7 +562,8 @@ def get_user_settings(
     
     return UserSettings(
         birthday=birthday_str,
-        is_recurring_active=bool(is_recurring)
+        is_recurring_active=bool(is_recurring),
+        has_saved_card=bool(payment_method_id)
     )
 
 
@@ -690,3 +691,41 @@ def request_cancel_autorenewal(
                 pass
     
     return {"success": True, "message": "Заявка создана", "request_id": request_id}
+
+
+@router.post("/enable-autorenewal")
+def enable_autorenewal(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Включить автопродление (если есть сохранённая карта)"""
+    user_id = current_user["user_id"]
+    
+    # Проверяем наличие сохранённой карты
+    result = db.execute(
+        text("SELECT yookassa_payment_method_id, is_recurring_active FROM users WHERE id = :user_id"),
+        {"user_id": user_id}
+    ).fetchone()
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    payment_method_id, is_recurring = result
+    
+    if is_recurring:
+        raise HTTPException(status_code=400, detail="Автопродление уже включено")
+    
+    if not payment_method_id:
+        raise HTTPException(
+            status_code=400, 
+            detail="Нет сохранённой карты. Для включения автопродления оплатите подписку через бота с галочкой 'Автопродление'"
+        )
+    
+    # Включаем автопродление
+    db.execute(
+        text("UPDATE users SET is_recurring_active = 1 WHERE id = :user_id"),
+        {"user_id": user_id}
+    )
+    db.commit()
+    
+    return {"success": True, "message": "Автопродление включено"}

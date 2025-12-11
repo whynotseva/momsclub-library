@@ -95,3 +95,4 @@ class UserSettings(BaseModel):
     """Настройки пользователя"""
     birthday: Optional[str] = None  # Формат YYYY-MM-DD
     is_recurring_active: bool = False  # Автопродление включено
+    has_saved_card: bool = False  # Есть ли сохранённая карта для автопродления

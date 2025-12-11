@@ -6,6 +6,7 @@ import { api } from '@/lib/api'
 interface UserSettings {
   birthday?: string
   is_recurring_active: boolean
+  has_saved_card?: boolean
 }
 
 export function SettingsCard() {
@@ -18,6 +19,7 @@ export function SettingsCard() {
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
   const [cancelling, setCancelling] = useState(false)
+  const [enabling, setEnabling] = useState(false)
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -76,6 +78,22 @@ export function SettingsCard() {
       alert(error.response?.data?.detail || 'Ошибка создания заявки')
     } finally {
       setCancelling(false)
+    }
+  }
+
+  const enableAutorenewal = async () => {
+    setEnabling(true)
+    try {
+      await api.post('/auth/enable-autorenewal')
+      // Обновляем настройки
+      const response = await api.get('/auth/settings')
+      setSettings(response.data)
+      alert('✅ Автопродление включено!')
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } }
+      alert(error.response?.data?.detail || 'Ошибка включения автопродления')
+    } finally {
+      setEnabling(false)
     }
   }
 
@@ -212,6 +230,14 @@ export function SettingsCard() {
                 className="px-3 py-1 text-xs text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
               >
                 Отключить
+              </button>
+            ) : settings?.has_saved_card ? (
+              <button
+                onClick={enableAutorenewal}
+                disabled={enabling}
+                className="px-3 py-1 text-xs text-green-600 border border-green-300 rounded-lg hover:bg-green-50 transition-colors disabled:opacity-50"
+              >
+                {enabling ? '...' : 'Включить'}
               </button>
             ) : (
               <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
