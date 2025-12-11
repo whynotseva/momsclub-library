@@ -3,7 +3,9 @@ API endpoints для авторизации
 """
 
 from datetime import datetime
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
@@ -555,6 +557,51 @@ def get_user_settings(
     if birthday:
         if isinstance(birthday, str):
             birthday_str = birthday[:10]  # YYYY-MM-DD
+        else:
+            birthday_str = birthday.strftime("%Y-%m-%d")
+    
+    return UserSettings(
+        birthday=birthday_str,
+        is_recurring_active=bool(is_recurring)
+    )
+
+
+class UpdateSettingsRequest(BaseModel):
+    birthday: Optional[str] = None  # Формат YYYY-MM-DD
+
+
+@router.put("/settings", response_model=UserSettings)
+def update_user_settings(
+    request: UpdateSettingsRequest,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Обновить настройки пользователя (только ДР, автопродление через бота)"""
+    # Валидация даты
+    if request.birthday:
+        try:
+            datetime.strptime(request.birthday, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Неверный формат даты. Используйте YYYY-MM-DD")
+    
+    # Обновляем birthday
+    db.execute(
+        text("UPDATE users SET birthday = :birthday WHERE id = :user_id"),
+        {"birthday": request.birthday, "user_id": current_user["user_id"]}
+    )
+    db.commit()
+    
+    # Возвращаем обновлённые настройки
+    result = db.execute(
+        text("SELECT birthday, is_recurring_active FROM users WHERE id = :user_id"),
+        {"user_id": current_user["user_id"]}
+    ).fetchone()
+    
+    birthday, is_recurring = result
+    birthday_str = None
+    if birthday:
+        if isinstance(birthday, str):
+            birthday_str = birthday[:10]
         else:
             birthday_str = birthday.strftime("%Y-%m-%d")
     

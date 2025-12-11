@@ -12,12 +12,18 @@ export function SettingsCard() {
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [birthdayInput, setBirthdayInput] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
         const response = await api.get('/auth/settings')
         setSettings(response.data)
+        if (response.data.birthday) {
+          setBirthdayInput(response.data.birthday)
+        }
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error'
         console.error('[SettingsCard] Error:', err)
@@ -28,6 +34,20 @@ export function SettingsCard() {
     }
     loadSettings()
   }, [])
+
+  const saveBirthday = async () => {
+    setSaving(true)
+    try {
+      const response = await api.put('/auth/settings', { birthday: birthdayInput || null })
+      setSettings(response.data)
+      setIsEditing(false)
+    } catch (err) {
+      console.error('[SettingsCard] Save error:', err)
+      alert('Ошибка сохранения')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const formatBirthday = (dateStr?: string) => {
     if (!dateStr) return null
@@ -87,20 +107,58 @@ export function SettingsCard() {
       {/* Settings List */}
       <div className="space-y-3">
         {/* Birthday */}
-        <div className="flex items-center justify-between p-3 bg-[#FAF6F1] rounded-xl">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">🎂</span>
-            <div>
-              <p className="font-medium text-[#2D2A26]">День рождения</p>
-              <p className="text-xs text-[#8B8279]">
-                {settings?.birthday 
-                  ? formatBirthday(settings.birthday)
-                  : 'Не указан'}
-              </p>
+        <div className="p-3 bg-[#FAF6F1] rounded-xl">
+          {isEditing ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🎂</span>
+                <p className="font-medium text-[#2D2A26]">День рождения</p>
+              </div>
+              <input
+                type="date"
+                value={birthdayInput}
+                onChange={(e) => setBirthdayInput(e.target.value)}
+                className="w-full px-3 py-2 border border-[#E8D4BA] rounded-lg text-[#2D2A26] focus:outline-none focus:ring-2 focus:ring-[#B08968]"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={saveBirthday}
+                  disabled={saving}
+                  className="flex-1 py-2 bg-[#B08968] text-white rounded-lg hover:bg-[#8B7355] transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Сохранение...' : 'Сохранить'}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing(false)
+                    setBirthdayInput(settings?.birthday || '')
+                  }}
+                  className="px-4 py-2 border border-[#E8D4BA] text-[#8B8279] rounded-lg hover:bg-[#FAF6F1] transition-colors"
+                >
+                  Отмена
+                </button>
+              </div>
             </div>
-          </div>
-          {settings?.birthday && (
-            <span className="text-xs text-[#B08968]">✓ Указан</span>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🎂</span>
+                <div>
+                  <p className="font-medium text-[#2D2A26]">День рождения</p>
+                  <p className="text-xs text-[#8B8279]">
+                    {settings?.birthday 
+                      ? formatBirthday(settings.birthday)
+                      : 'Не указан'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-3 py-1 text-xs text-[#B08968] border border-[#B08968] rounded-lg hover:bg-[#B08968] hover:text-white transition-colors"
+              >
+                {settings?.birthday ? 'Изменить' : 'Указать'}
+              </button>
+            </div>
           )}
         </div>
 
@@ -129,7 +187,7 @@ export function SettingsCard() {
 
       {/* Info */}
       <p className="mt-4 text-xs text-[#8B8279] text-center">
-        Для изменения настроек используйте бота
+        Автопродление управляется через бота
       </p>
     </div>
   )
