@@ -89,3 +89,9 @@ class PaymentHistory(BaseModel):
     payments: list[PaymentItem] = []
     total_paid: int = 0
     total_count: int = 0
+
+
+class UserSettings(BaseModel):
+    """Настройки пользователя"""
+    birthday: Optional[str] = None  # Формат YYYY-MM-DD
+    is_recurring_active: bool = False  # Автопродление включено

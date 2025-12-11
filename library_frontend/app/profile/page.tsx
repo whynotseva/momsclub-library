@@ -2,7 +2,7 @@
 
 import { useAuthContext } from '@/contexts/AuthContext'
 import { LoadingSpinner } from '@/components/shared'
-import { LoyaltyCard, ReferralCard, PaymentHistoryCard } from '@/components/profile'
+import { LoyaltyCard, ReferralCard, PaymentHistoryCard, SettingsCard } from '@/components/profile'
 import Link from 'next/link'
 
 export default function ProfilePage() {
@@ -195,6 +195,11 @@ export default function ProfilePage() {
         {/* История платежей */}
         <div className="mt-6">
           <PaymentHistoryCard />
+        </div>
+
+        {/* Настройки */}
+        <div className="mt-6">
+          <SettingsCard />
         </div>
 
         {/* Support */}

@@ -9,7 +9,7 @@ from sqlalchemy import text
 
 from app.database import get_db
 from app.config import settings
-from app.schemas import TelegramAuthData, TokenResponse, UserInfo, SubscriptionStatus, LoyaltyInfo, ReferralInfo, PaymentItem, PaymentHistory
+from app.schemas import TelegramAuthData, TokenResponse, UserInfo, SubscriptionStatus, LoyaltyInfo, ReferralInfo, PaymentItem, PaymentHistory, UserSettings
 from app.utils.auth import verify_telegram_auth, create_access_token
 from app.api.dependencies import get_current_user, get_current_user_with_subscription
 
@@ -527,4 +527,38 @@ def get_payment_history(
         payments=payments,
         total_paid=total_paid,
         total_count=len(payments)
+    )
+
+
+@router.get("/settings", response_model=UserSettings)
+def get_user_settings(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Получить настройки пользователя (ДР, автопродление)"""
+    result = db.execute(
+        text("""
+            SELECT birthday, is_recurring_active
+            FROM users 
+            WHERE id = :user_id
+        """),
+        {"user_id": current_user["user_id"]}
+    ).fetchone()
+    
+    if not result:
+        return UserSettings()
+    
+    birthday, is_recurring = result
+    
+    # Форматируем дату рождения
+    birthday_str = None
+    if birthday:
+        if isinstance(birthday, str):
+            birthday_str = birthday[:10]  # YYYY-MM-DD
+        else:
+            birthday_str = birthday.strftime("%Y-%m-%d")
+    
+    return UserSettings(
+        birthday=birthday_str,
+        is_recurring_active=bool(is_recurring)
     )
