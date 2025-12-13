@@ -1,7 +1,7 @@
 'use client'
 
 interface MobileNavProps {
-  activePage?: 'library' | 'favorites' | 'history'
+  activePage?: 'library' | 'favorites' | 'history' | 'profile'
   isPWA?: boolean
   isVisible?: boolean
 }
@@ -14,6 +14,7 @@ export function MobileNav({ activePage = 'library', isPWA = false, isVisible = t
     { href: '/library', label: 'Библиотека', key: 'library' },
     { href: '/favorites', label: 'Избранное', key: 'favorites' },
     { href: '/history', label: 'История', key: 'history' },
+    { href: '/profile', label: 'Профиль', key: 'profile' },
   ]
 
   return (
@@ -54,7 +55,7 @@ export function MobileNav({ activePage = 'library', isPWA = false, isVisible = t
           <a
             key={item.key}
             href={item.href}
-            className={`px-4 py-2 rounded-xl text-sm font-medium ${
+            className={`px-2 py-1.5 rounded-xl text-xs font-medium ${
               activePage === item.key
                 ? 'font-semibold bg-[#B08968] text-white shadow-md'
                 : 'text-[#8B8279]'

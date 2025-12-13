@@ -79,6 +79,7 @@ export function useLibraryData() {
         setUser(prev => ({
           ...prev,
           subscriptionDaysLeft: subData.days_left || 0,
+          daysInClub: subData.days_in_club || 0,
         }))
         
         // Если нет подписки — не загружаем данные библиотеки

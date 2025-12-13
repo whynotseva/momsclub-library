@@ -24,9 +24,10 @@ interface PaymentModalProps {
   onClose: () => void
   isFirstPayment?: boolean
   hasSubscription?: boolean
+  discountPercent?: number
 }
 
-export default function PaymentModal({ isOpen, onClose, isFirstPayment = false, hasSubscription = false }: PaymentModalProps) {
+export default function PaymentModal({ isOpen, onClose, isFirstPayment = false, hasSubscription = false, discountPercent = 0 }: PaymentModalProps) {
   const [selectedTariff, setSelectedTariff] = useState<string>('1month')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -64,11 +65,29 @@ export default function PaymentModal({ isOpen, onClose, isFirstPayment = false, 
     }
   }
 
-  const getPrice = (tariff: Tariff) => {
+  const getBasePrice = (tariff: Tariff) => {
     if (isFirstPayment && tariff.priceFirst && tariff.id === '1month') {
       return tariff.priceFirst
     }
     return tariff.price
+  }
+
+  const getFinalPrice = (tariff: Tariff) => {
+    const base = getBasePrice(tariff)
+    // Скидка лояльности не применяется к первой оплате 690₽
+    if (isFirstPayment && tariff.id === '1month') {
+      return base
+    }
+    if (discountPercent > 0) {
+      return Math.floor(base * (100 - discountPercent) / 100)
+    }
+    return base
+  }
+
+  const hasLoyaltyDiscount = (tariff: Tariff) => {
+    // Скидка лояльности не применяется к первой оплате
+    if (isFirstPayment && tariff.id === '1month') return false
+    return discountPercent > 0
   }
 
   const getSavings = (tariff: Tariff) => {
@@ -114,10 +133,13 @@ export default function PaymentModal({ isOpen, onClose, isFirstPayment = false, 
         {/* Tariffs */}
         <div className="space-y-3 mb-6">
           {TARIFFS.map((tariff) => {
-            const price = getPrice(tariff)
+            const basePrice = getBasePrice(tariff)
+            const finalPrice = getFinalPrice(tariff)
             const savings = getSavings(tariff)
             const isSelected = selectedTariff === tariff.id
             const showFirstDiscount = isFirstPayment && tariff.priceFirst && tariff.id === '1month'
+            const showLoyaltyDiscount = hasLoyaltyDiscount(tariff)
+            const showStrikethrough = showFirstDiscount || showLoyaltyDiscount
             
             return (
               <button
@@ -135,33 +157,41 @@ export default function PaymentModal({ isOpen, onClose, isFirstPayment = false, 
                   </span>
                 )}
                 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-[#2D2A26]">{tariff.name}</p>
-                    <p className="text-xs text-[#8B8279]">{tariff.days} дней доступа</p>
+                <div className="flex items-center gap-3">
+                  {/* Selection indicator */}
+                  <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    isSelected ? 'border-[#B08968] bg-[#B08968]' : 'border-[#E8D4BA]'
+                  }`}>
+                    {isSelected && <span className="text-white text-xs">✓</span>}
                   </div>
                   
-                  <div className="text-right">
-                    <div className="flex items-center gap-2">
-                      {showFirstDiscount && (
-                        <span className="text-sm text-[#8B8279] line-through">{tariff.price}₽</span>
-                      )}
-                      <span className="text-lg font-bold text-[#2D2A26]">{price}₽</span>
+                  {/* Tariff info */}
+                  <div className="flex-1 flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-[#2D2A26]">{tariff.name}</p>
+                      <p className="text-xs text-[#8B8279]">{tariff.days} дней доступа</p>
                     </div>
-                    {savings > 0 && !showFirstDiscount && (
-                      <span className="text-xs text-green-600">Экономия {savings}%</span>
-                    )}
-                    {showFirstDiscount && (
-                      <span className="text-xs text-green-600">-30%</span>
-                    )}
+                    
+                    <div className="text-right">
+                      <div className="flex items-center gap-2">
+                        {showStrikethrough && (
+                          <span className="text-sm text-[#8B8279] line-through">
+                            {showFirstDiscount ? tariff.price : basePrice}₽
+                          </span>
+                        )}
+                        <span className="text-lg font-bold text-[#2D2A26]">{finalPrice}₽</span>
+                      </div>
+                      {showLoyaltyDiscount && (
+                        <span className="text-xs text-green-600 font-medium">💎 -{discountPercent}% лояльность</span>
+                      )}
+                      {savings > 0 && !showFirstDiscount && !showLoyaltyDiscount && (
+                        <span className="text-xs text-green-600">Экономия {savings}%</span>
+                      )}
+                      {showFirstDiscount && (
+                        <span className="text-xs text-green-600">🎁 -30% первая оплата</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                
-                {/* Selection indicator */}
-                <div className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  isSelected ? 'border-[#B08968] bg-[#B08968]' : 'border-[#E8D4BA]'
-                }`}>
-                  {isSelected && <span className="text-white text-xs">✓</span>}
                 </div>
               </button>
             )
@@ -190,7 +220,7 @@ export default function PaymentModal({ isOpen, onClose, isFirstPayment = false, 
               Создание платежа...
             </span>
           ) : (
-            `Оплатить ${getPrice(TARIFFS.find(t => t.id === selectedTariff)!)}₽`
+            `Оплатить ${getFinalPrice(TARIFFS.find(t => t.id === selectedTariff)!)}₽`
           )}
         </button>
 

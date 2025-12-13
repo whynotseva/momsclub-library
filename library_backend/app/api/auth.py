@@ -237,11 +237,30 @@ def check_subscription(
         {"user_id": current_user["user_id"]}
     ).fetchone()
     
+    # Вычисляем days_in_club — сумма дней всех активных подписок
+    days_in_club = 0
+    subscriptions = db.execute(
+        text("""
+        SELECT start_date, end_date FROM subscriptions 
+        WHERE user_id = :user_id
+        ORDER BY start_date
+        """),
+        {"user_id": current_user["user_id"]}
+    ).fetchall()
+    
+    for sub in subscriptions:
+        start = datetime.fromisoformat(sub[0]) if sub[0] else datetime.now()
+        end = datetime.fromisoformat(sub[1]) if sub[1] else datetime.now()
+        if end > datetime.now():
+            end = datetime.now()
+        days_in_club += max(0, (end - start).days)
+    
     if not subscription_result:
         return SubscriptionStatus(
             has_active_subscription=False,
             subscription_end=None,
-            days_left=None
+            days_left=None,
+            days_in_club=days_in_club
         )
     
     end_date_str = subscription_result[0]
@@ -251,7 +270,8 @@ def check_subscription(
     return SubscriptionStatus(
         has_active_subscription=True,
         subscription_end=end_date_str,
-        days_left=days_left
+        days_left=days_left,
+        days_in_club=days_in_club
     )
 
 
@@ -803,9 +823,19 @@ def create_payment(
     telegram_id, first_name, username, phone, is_first_payment_done, \
         one_time_discount, lifetime_discount, loyalty_level = user_data
     
+    # Логируем для отладки
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(f"[PAYMENT DEBUG] user_id={user_id}, tariff={request.tariff}")
+    logger.warning(f"[PAYMENT DEBUG] is_first_payment_done={is_first_payment_done} (type={type(is_first_payment_done)})")
+    logger.warning(f"[PAYMENT DEBUG] one_time_discount={one_time_discount}, lifetime_discount={lifetime_discount}")
+    
     # Определяем базовую цену
     # Первая оплата со скидкой только для 1 месяца
-    if not is_first_payment_done and request.tariff == "1month":
+    # Приводим is_first_payment_done к bool явно
+    is_first_done = bool(is_first_payment_done)
+    
+    if not is_first_done and request.tariff == "1month":
         base_price = tariff["price_first"]  # 690₽
     else:
         base_price = tariff["price"]
@@ -814,15 +844,19 @@ def create_payment(
     
     # Применяем скидку лояльности (только если это не первая оплата со скидкой)
     discount_percent = 0
-    if base_price != tariff.get("price_first") or is_first_payment_done:
+    if base_price != tariff.get("price_first") or is_first_done:
         # Берём максимальную скидку из разовой и постоянной
         discount_percent = max(one_time_discount or 0, lifetime_discount or 0)
+    
+    logger.warning(f"[PAYMENT DEBUG] base_price={base_price}, discount_percent={discount_percent}")
     
     # Рассчитываем финальную цену
     if discount_percent > 0:
         final_price = int(base_price * (100 - discount_percent) / 100)
     else:
         final_price = base_price
+    
+    logger.warning(f"[PAYMENT DEBUG] final_price={final_price}")
     
     # Создаём платёж через YooKassa SDK
     try:
@@ -849,8 +883,8 @@ def create_payment(
         if discount_percent > 0:
             description += f" | Скидка: {discount_percent}%"
         
-        # URL возврата
-        return_url = os.getenv("PAYMENT_RETURN_URL", "https://momsclub.online/profile")
+        # URL возврата на страницу успешной оплаты
+        return_url = os.getenv("PAYMENT_RETURN_URL", "https://librarymomsclub.ru/payment/success")
         
         # Метаданные
         metadata = {

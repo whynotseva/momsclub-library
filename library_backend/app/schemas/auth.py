@@ -44,6 +44,7 @@ class SubscriptionStatus(BaseModel):
     has_active_subscription: bool
     subscription_end: Optional[str] = None
     days_left: Optional[int] = None
+    days_in_club: int = 0
 
 
 class LoyaltyInfo(BaseModel):

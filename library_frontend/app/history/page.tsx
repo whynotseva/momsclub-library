@@ -151,9 +151,10 @@ export default function HistoryPage() {
 
       <nav className={`md:hidden fixed bottom-6 left-4 right-4 z-50 transition-all duration-300 ease-in-out ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'}`}>
         <div className="flex items-center justify-around rounded-2xl px-2 py-3 shadow-2xl border border-white/50" style={{ background: 'rgba(255,255,255,0.45)', backdropFilter: 'blur(24px) saturate(180%)' }}>
-          <a href="/library" className="px-4 py-2 rounded-xl text-[#8B8279] text-sm font-medium">Библиотека</a>
-          <a href="/favorites" className="px-4 py-2 rounded-xl text-[#8B8279] text-sm font-medium">Избранное</a>
-          <a href="/history" className="px-4 py-2 rounded-xl bg-[#B08968] text-white text-sm font-semibold shadow-md">История</a>
+          <a href="/library" className="px-2 py-1.5 rounded-xl text-[#8B8279] text-xs font-medium">Библиотека</a>
+          <a href="/favorites" className="px-2 py-1.5 rounded-xl text-[#8B8279] text-xs font-medium">Избранное</a>
+          <a href="/history" className="px-2 py-1.5 rounded-xl bg-[#B08968] text-white text-xs font-semibold shadow-md">История</a>
+          <a href="/profile" className="px-2 py-1.5 rounded-xl text-[#8B8279] text-xs font-medium">Профиль</a>
         </div>
       </nav>
     </div>

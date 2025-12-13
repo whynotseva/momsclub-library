@@ -6,8 +6,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { useLibraryData } from '@/hooks/useLibraryData'
 import { useScrollVisibility } from '@/hooks/useScrollVisibility'
 import { LoadingSpinner } from '@/components/shared'
-import { QuoteOfDay, MobileNav, PushPromoModal, CategoryFilter, SubscriptionCard, MaterialCard, Header, FeaturedSection, WelcomeCard, SearchBar } from '@/components/library'
-import { LOYALTY_BADGES } from '@/lib/constants'
+import { QuoteOfDay, MobileNav, PushPromoModal, CategoryFilter, MaterialCard, Header, FeaturedSection, WelcomeCard, SearchBar } from '@/components/library'
 
 export default function LibraryPage() {
   // Основные данные из хука
@@ -159,21 +158,16 @@ export default function LibraryPage() {
 
       {/* Main Content — с отступом под fixed header */}
       <main className="max-w-7xl mx-auto px-4 py-8" style={{ paddingTop: 'calc(5rem + env(safe-area-inset-top, 0px))' }}>
-        {/* Приветствие + Профиль */}
-        <div className="mb-10 grid lg:grid-cols-3 gap-6">
-          {/* Приветствие */}
+        {/* Приветствие */}
+        <div className="mb-10">
           <WelcomeCard
             userName={user.name}
             materialsViewed={user.materialsViewed}
             favorites={user.favorites}
             uniqueViewed={user.uniqueViewed}
             totalMaterials={user.totalMaterials}
-            loyaltyLevel={user.loyaltyLevel}
-            loyaltyBadges={LOYALTY_BADGES}
+            subscriptionDaysLeft={user.subscriptionDaysLeft}
           />
-          
-          {/* Карточка подписки */}
-          <SubscriptionCard daysLeft={user.subscriptionDaysLeft} total={user.subscriptionTotal} />
         </div>
 
         {/* Цитата дня */}

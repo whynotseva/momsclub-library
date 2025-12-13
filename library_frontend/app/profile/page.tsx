@@ -2,13 +2,27 @@
 
 import { useAuthContext } from '@/contexts/AuthContext'
 import { LoadingSpinner } from '@/components/shared'
-import { LoyaltyCard, ReferralCard, PaymentHistoryCard, SettingsCard, PaymentModal } from '@/components/profile'
-import { useState } from 'react'
+import { LoyaltyCard, ReferralCard, PaymentHistoryCard, SettingsCard, PaymentModal, ProfileMobileNav } from '@/components/profile'
+import { useState, useEffect } from 'react'
+import { api } from '@/lib/api'
 import Link from 'next/link'
 
 export default function ProfilePage() {
-  const { user, loading, hasSubscription, logout } = useAuthContext()
+  const { user, loading, hasSubscription } = useAuthContext()
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [discountPercent, setDiscountPercent] = useState(0)
+
+  useEffect(() => {
+    const loadDiscount = async () => {
+      try {
+        const response = await api.get('/auth/loyalty')
+        setDiscountPercent(response.data.discount_percent || 0)
+      } catch {
+        setDiscountPercent(0)
+      }
+    }
+    if (!loading) loadDiscount()
+  }, [loading])
 
   if (loading) {
     return (
@@ -25,7 +39,7 @@ export default function ProfilePage() {
       <div className="fixed -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-tr from-[#C9B89A]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#E8D4BA]/30">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#E8D4BA]/30" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           {/* Logo with Santa */}
           <Link href={hasSubscription ? "/" : "/profile"} prefetch={false} className="group relative">
@@ -37,23 +51,14 @@ export default function ProfilePage() {
             <span className="absolute -top-2 -left-1 text-xl transform -rotate-12">🎅</span>
           </Link>
           
-          <div className="flex items-center gap-4">
-            {hasSubscription && (
-              <Link 
-                href="/"
-                prefetch={false}
-                className="text-sm font-medium text-[#B08968] hover:text-[#8B7355] transition-colors flex items-center gap-1"
-              >
-                <span>📚</span> В библиотеку
-              </Link>
-            )}
-            <button
-              onClick={logout}
-              className="text-sm text-[#8B8279] hover:text-[#5D4E3A] transition-colors"
-            >
-              Выйти
-            </button>
-          </div>
+{/* Десктоп: кнопка в библиотеку */}
+          <Link 
+            href="/library" 
+            className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#F5E6D3]/50 hover:bg-[#F5E6D3] text-[#5D4E3A] rounded-xl transition-colors text-sm font-medium"
+          >
+            <span>📚</span>
+            <span>В библиотеку</span>
+          </Link>
         </div>
       </header>
 
@@ -232,7 +237,11 @@ export default function ProfilePage() {
         onClose={() => setShowPaymentModal(false)}
         isFirstPayment={!user?.subscriptionDaysLeft}
         hasSubscription={hasSubscription}
+        discountPercent={discountPercent}
       />
+
+      {/* Mobile Navigation */}
+      <ProfileMobileNav />
     </div>
   )
 }

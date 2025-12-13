@@ -21,7 +21,7 @@ export const ADMIN_GROUP_INFO: Record<string, { emoji: string; name: string }> =
 export const LOYALTY_BADGES = {
   none: {
     label: 'Новичок',
-    color: 'bg-gray-100 text-gray-600',
+    color: 'bg-[#F5E6D3]/70 text-[#8B8279]',
     icon: '🌱',
     bonus: '10% реферальный бонус',
     daysInClub: 0,
@@ -30,7 +30,7 @@ export const LOYALTY_BADGES = {
   },
   silver: {
     label: 'Silver',
-    color: 'bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700',
+    color: 'bg-[#E8D4BA]/60 text-[#7A6B5A]',
     icon: '🥈',
     bonus: '15% реферальный бонус',
     daysInClub: 90,
@@ -39,7 +39,7 @@ export const LOYALTY_BADGES = {
   },
   gold: {
     label: 'Gold',
-    color: 'bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700',
+    color: 'bg-[#D4C4A8]/70 text-[#6B5D4A]',
     icon: '🥇',
     bonus: '20% реферальный бонус',
     daysInClub: 180,
@@ -48,7 +48,7 @@ export const LOYALTY_BADGES = {
   },
   platinum: {
     label: 'Platinum',
-    color: 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-700',
+    color: 'bg-[#C9A882]/50 text-[#5D4E3A]',
     icon: '💎',
     bonus: '30% реферальный бонус',
     daysInClub: 365,

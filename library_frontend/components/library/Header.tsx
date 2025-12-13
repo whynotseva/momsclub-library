@@ -75,6 +75,7 @@ export function Header({
             <a href="/library" className="text-[#B08968] font-semibold">Библиотека</a>
             <a href="/favorites" className="text-[#8B8279] hover:text-[#B08968] transition-colors">Избранное</a>
             <a href="/history" className="text-[#8B8279] hover:text-[#B08968] transition-colors">История</a>
+            <a href="/profile" className="text-[#8B8279] hover:text-[#B08968] transition-colors">Профиль</a>
           </nav>
           
           <div className="flex items-center space-x-4">
