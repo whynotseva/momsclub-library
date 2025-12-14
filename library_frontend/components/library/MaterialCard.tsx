@@ -52,7 +52,7 @@ export const MaterialCard = memo(function MaterialCard({
 
   return (
     <div
-      className="group bg-white/90 rounded-2xl shadow-lg shadow-[#C9A882]/10 hover:shadow-xl hover:shadow-[#C9A882]/20 transition-all duration-500 p-5 cursor-pointer border border-[#E8D4BA]/40 hover:-translate-y-1 relative overflow-hidden animate-fadeIn"
+      className="group bg-[var(--bg-card)] rounded-2xl shadow-lg shadow-[var(--shadow)] hover:shadow-xl transition-all duration-500 p-5 cursor-pointer border border-[var(--border)] hover:-translate-y-1 relative overflow-hidden animate-fadeIn"
       style={{ animationDelay: `${animationDelay}ms` }}
     >
       {/* Бейджи */}
@@ -74,7 +74,7 @@ export const MaterialCard = memo(function MaterialCard({
         className={`absolute bottom-2 right-2 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-md ${
           isFavorite
             ? 'bg-red-500 text-white'
-            : 'bg-white/90 text-gray-400 hover:bg-red-100 hover:text-red-500'
+            : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-500'
         }`}
       >
         <span className="text-base">{isFavorite ? '❤️' : '🤍'}</span>
@@ -94,25 +94,25 @@ export const MaterialCard = memo(function MaterialCard({
           </div>
         )}
 
-        <span className="text-xs bg-[#F5E6D3] text-[#8B7355] px-2 py-1 rounded-full font-medium inline-block max-w-full truncate" title={categoryName}>
+        <span className="text-xs bg-[var(--bg-secondary)] text-[var(--text-secondary)] px-2 py-1 rounded-full font-medium inline-block max-w-full truncate" title={categoryName}>
           {categoryName}
         </span>
 
-        <h4 className="font-semibold text-[#2D2A26] mt-2 text-sm leading-tight line-clamp-2">
+        <h4 className="font-semibold text-[var(--text-primary)] mt-2 text-sm leading-tight line-clamp-2">
           {material.title}
         </h4>
 
         {material.description && (
-          <p className="text-xs text-[#8B8279] mt-1 line-clamp-2">{material.description}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-2">{material.description}</p>
         )}
 
-        <div className="text-xs text-[#8B8279] mt-2 flex items-center gap-3">
+        <div className="text-xs text-[var(--text-muted)] mt-2 flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span>👁️</span>
             <span>{material.views}</span>
           </span>
           {(material.favorites_count ?? 0) > 0 && (
-            <span className="flex items-center gap-1 text-[#B08968]">
+            <span className="flex items-center gap-1 text-[var(--accent)]">
               <span>❤️</span>
               <span>{material.favorites_count}</span>
             </span>

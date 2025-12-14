@@ -27,12 +27,12 @@ export function SearchBar({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="🔍 Поиск материалов..."
-          className="w-full px-5 py-3 lg:px-6 lg:py-4 rounded-xl lg:rounded-2xl bg-white/90 border border-[#E8D4BA]/40 focus:border-[#B08968] focus:outline-none focus:ring-2 focus:ring-[#B08968]/20 text-[#2D2A26] placeholder-[#A09890] shadow-lg shadow-[#C9A882]/5 transition-all"
+          className="w-full px-5 py-3 lg:px-6 lg:py-4 rounded-xl lg:rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 text-[var(--text-primary)] placeholder-[var(--text-muted)] shadow-lg transition-all"
         />
         {value && (
           <button 
             onClick={() => onChange('')}
-            className="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 text-[#8B8279] hover:text-[#B08968] text-lg"
+            className="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--accent)] text-lg"
           >
             ✕
           </button>
@@ -40,18 +40,18 @@ export function SearchBar({
       </div>
       
       {/* Прогресс изучения — только десктоп */}
-      <div className="hidden lg:block bg-white/90 rounded-2xl p-4 border border-[#E8D4BA]/40 shadow-lg shadow-[#C9A882]/5">
+      <div className="hidden lg:block bg-[var(--bg-card)] rounded-2xl p-4 border border-[var(--border)] shadow-lg">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-[#8B8279]">📚 Изучено материалов</span>
-          <span className="text-xs font-bold text-[#B08968]">{Math.round(progressPercent)}%</span>
+          <span className="text-xs font-medium text-[var(--text-muted)]">📚 Изучено материалов</span>
+          <span className="text-xs font-bold text-[var(--accent)]">{Math.round(progressPercent)}%</span>
         </div>
-        <div className="h-2 bg-[#F5E6D3] rounded-full overflow-hidden">
+        <div className="h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-[#B08968] to-[#C9A882] rounded-full transition-all duration-500"
+            className="h-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-hover)] rounded-full transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           ></div>
         </div>
-        <div className="text-xs text-[#8B8279] mt-1">{uniqueViewed} из {totalMaterials}</div>
+        <div className="text-xs text-[var(--text-muted)] mt-1">{uniqueViewed} из {totalMaterials}</div>
       </div>
     </div>
   )

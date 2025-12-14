@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Avatar } from '@/components/shared'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 interface Notification {
   id: number
@@ -57,8 +58,8 @@ export function Header({
 }: HeaderProps) {
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 border-b border-white/50 shadow-lg transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`} 
-      style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(20px) saturate(180%)', paddingTop: 'env(safe-area-inset-top)' }}
+      className={`fixed top-0 left-0 right-0 z-50 border-b border-[var(--border)] shadow-lg transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`} 
+      style={{ background: 'var(--bg-header)', backdropFilter: 'blur(20px) saturate(180%)', paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="max-w-7xl mx-auto px-6 py-2">
         <div className="flex items-center justify-between">
@@ -72,20 +73,23 @@ export function Header({
           </a>
           
           <nav className="hidden md:flex space-x-8">
-            <a href="/library" className="text-[#B08968] font-semibold">Библиотека</a>
-            <a href="/favorites" className="text-[#8B8279] hover:text-[#B08968] transition-colors">Избранное</a>
-            <a href="/history" className="text-[#8B8279] hover:text-[#B08968] transition-colors">История</a>
-            <a href="/profile" className="text-[#8B8279] hover:text-[#B08968] transition-colors">Профиль</a>
+            <a href="/library" className="text-[var(--accent)] font-semibold">Библиотека</a>
+            <a href="/favorites" className="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">Избранное</a>
+            <a href="/history" className="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">История</a>
+            <a href="/profile" className="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">Профиль</a>
           </nav>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
+            {/* Переключатель темы */}
+            <ThemeToggle size="sm" />
+            
             {/* Уведомления */}
             <div className="relative">
               <button 
                 onClick={onToggleNotifications}
-                className="relative p-2 hover:bg-[#F5E6D3]/50 rounded-xl transition-colors"
+                className="relative p-2 hover:bg-[var(--bg-secondary)] rounded-xl transition-colors"
               >
-                <svg className="w-6 h-6 text-[#B08968]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-6 h-6 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {user.notifications > 0 && (
@@ -105,13 +109,13 @@ export function Header({
               
               {/* Dropdown уведомлений */}
               {showNotifications && (
-                <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-2xl border border-[#E8D4BA]/40 z-50 overflow-hidden">
+                <div className="absolute right-0 top-12 w-80 bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border)] z-50 overflow-hidden">
                   {/* Header */}
-                  <div className="px-4 py-3 border-b border-[#E8D4BA]/30 flex items-center justify-between">
-                    <span className="font-bold text-[#2D2A26]">Уведомления</span>
+                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
+                    <span className="font-bold text-[var(--text-primary)]">Уведомления</span>
                     <button 
                       onClick={onMarkAllAsRead}
-                      className="text-xs text-[#B08968] hover:text-[#8B7355] font-medium"
+                      className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium"
                     >
                       Прочитать все
                     </button>
@@ -120,7 +124,7 @@ export function Header({
                   {/* Notifications list */}
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="px-4 py-8 text-center text-[#8B8279]">
+                      <div className="px-4 py-8 text-center text-[var(--text-muted)]">
                         <span className="text-3xl mb-2 block">✨</span>
                         Нет новых уведомлений
                       </div>
@@ -129,18 +133,18 @@ export function Header({
                         <div 
                           key={notif.id}
                           onClick={() => onMarkAsRead(notif.id)}
-                          className={`px-4 py-3 border-b border-[#E8D4BA]/20 hover:bg-[#FBF8F3] cursor-pointer transition-colors ${
-                            !notif.is_read ? 'bg-[#F5E6D3]/20' : ''
+                          className={`px-4 py-3 border-b border-[var(--border)] hover:bg-[var(--bg-secondary)] cursor-pointer transition-colors ${
+                            !notif.is_read ? 'bg-[var(--bg-secondary)]/50' : ''
                           }`}
                         >
                           <div className="flex items-start space-x-3">
                             <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                              !notif.is_read ? 'bg-[#B08968]' : 'bg-gray-300'
+                              !notif.is_read ? 'bg-[var(--accent)]' : 'bg-[var(--text-muted)]'
                             }`}></div>
                             <div className="flex-1">
-                              <p className="font-semibold text-sm text-[#2D2A26]">{notif.title}</p>
-                              <p className="text-sm text-[#5C5650]">{notif.text}</p>
-                              <p className="text-xs text-[#8B8279] mt-1">
+                              <p className="font-semibold text-sm text-[var(--text-primary)]">{notif.title}</p>
+                              <p className="text-sm text-[var(--text-secondary)]">{notif.text}</p>
+                              <p className="text-xs text-[var(--text-muted)] mt-1">
                                 {new Date(notif.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                               </p>
                             </div>
@@ -151,15 +155,15 @@ export function Header({
                   </div>
                   
                   {/* Footer с Push toggle */}
-                  <div className="px-4 py-3 border-t border-[#E8D4BA]/30">
+                  <div className="px-4 py-3 border-t border-[var(--border)]">
                     {pushSupported && (
                       <button 
                         onClick={onTogglePush}
                         disabled={pushLoading}
                         className={`w-full mb-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                           pushSubscribed 
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                            : 'bg-[#F5E6D3] text-[#8B7355] hover:bg-[#E8D4BA]'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50' 
+                            : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--border)]'
                         }`}
                       >
                         {pushLoading ? (
@@ -173,7 +177,7 @@ export function Header({
                     )}
                     <button 
                       onClick={onToggleNotifications}
-                      className="w-full text-sm text-[#B08968] hover:text-[#8B7355] font-medium"
+                      className="w-full text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium"
                     >
                       Закрыть
                     </button>
@@ -200,22 +204,22 @@ export function Header({
               
               {/* Выпадающее меню профиля */}
               {showProfileMenu && (
-                <div className="absolute right-0 top-12 bg-white rounded-xl shadow-xl border border-[#E8D4BA]/50 py-2 min-w-[160px] z-50">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm font-medium text-[#2D2A26]">{user.name}</p>
-                    <p className="text-xs text-[#8B8279]">@{typeof window !== 'undefined' && localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}').username : ''}</p>
+                <div className="absolute right-0 top-12 bg-[var(--bg-card)] rounded-xl shadow-xl border border-[var(--border)] py-2 min-w-[160px] z-50">
+                  <div className="px-4 py-2 border-b border-[var(--border)]">
+                    <p className="text-sm font-medium text-[var(--text-primary)]">{user.name}</p>
+                    <p className="text-xs text-[var(--text-muted)]">@{typeof window !== 'undefined' && localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}').username : ''}</p>
                   </div>
                   {isAdmin && (
                     <Link 
                       href="/admin"
-                      className="w-full px-4 py-2 text-left text-sm text-[#B08968] hover:bg-[#F5E6D3] transition-colors flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-sm text-[var(--accent)] hover:bg-[var(--bg-secondary)] transition-colors flex items-center gap-2"
                     >
                       <span>⚙️</span> Админ-панель
                     </Link>
                   )}
                   <button 
                     onClick={onLogout}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

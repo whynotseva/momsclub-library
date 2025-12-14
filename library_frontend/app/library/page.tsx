@@ -214,7 +214,7 @@ export default function LibraryPage() {
         
         {/* Результаты поиска */}
         {searchQuery && (
-          <p className="text-sm text-[#8B8279] mb-4 -mt-2">
+          <p className="text-sm text-[var(--text-muted)] mb-4 -mt-2">
             🔍 Найдено: {filteredMaterials.length} материалов
           </p>
         )}
@@ -223,25 +223,25 @@ export default function LibraryPage() {
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <h3 className="text-2xl font-bold text-[#2D2A26]">
+              <h3 className="text-2xl font-bold text-[var(--text-primary)]">
                 {searchQuery ? '🔍 Результаты поиска' : '📚 Материалы'}
               </h3>
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">
+              <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full font-semibold">
                 {filteredMaterials.length} шт.
               </span>
             </div>
           </div>
           
           {filteredMaterials.length === 0 ? (
-            <div className="text-center py-12 bg-white/80 rounded-2xl border border-[#E8D4BA]/40">
+            <div className="text-center py-12 bg-[var(--bg-card)] rounded-2xl border border-[var(--border)]">
               <div className="text-4xl mb-4">{searchQuery ? '🔍' : '📭'}</div>
-              <p className="text-[#8B8279] mb-2">
+              <p className="text-[var(--text-muted)] mb-2">
                 {searchQuery ? `Ничего не найдено по запросу "${searchQuery}"` : 'Пока нет материалов'}
               </p>
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery('')}
-                  className="text-[#B08968] hover:underline text-sm"
+                  className="text-[var(--accent)] hover:underline text-sm"
                 >
                   Сбросить поиск
                 </button>
@@ -269,7 +269,7 @@ export default function LibraryPage() {
                   {visibleCount < filteredMaterials.length && (
                     <button
                       onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
-                      className="px-6 py-3 bg-gradient-to-r from-[#B08968] to-[#A67C52] text-white font-medium rounded-xl shadow-lg shadow-[#B08968]/25 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                      className="px-6 py-3 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-hover)] text-white font-medium rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
                     >
                       Показать ещё ({Math.min(ITEMS_PER_PAGE, filteredMaterials.length - visibleCount)})
                     </button>
@@ -277,7 +277,7 @@ export default function LibraryPage() {
                   {visibleCount > ITEMS_PER_PAGE && (
                     <button
                       onClick={() => setVisibleCount(ITEMS_PER_PAGE)}
-                      className="px-6 py-3 bg-white/90 text-[#5C5650] font-medium rounded-xl border border-[#E8D4BA]/40 hover:bg-[#F5E6D3] hover:-translate-y-0.5 transition-all duration-300"
+                      className="px-6 py-3 bg-[var(--bg-card)] text-[var(--text-secondary)] font-medium rounded-xl border border-[var(--border)] hover:bg-[var(--bg-secondary)] hover:-translate-y-0.5 transition-all duration-300"
                     >
                       Скрыть
                     </button>
@@ -291,22 +291,22 @@ export default function LibraryPage() {
         {/* Категории из API */}
         {apiCategories.length > 0 && (
           <section className="mb-12">
-            <h3 className="text-2xl font-bold text-[#2D2A26] mb-6">📂 Категории</h3>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-6">📂 Категории</h3>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {apiCategories.map((cat) => (
                 <button 
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.slug)}
-                  className={`group bg-white/90 rounded-2xl p-6 text-center shadow-lg shadow-[#C9A882]/10 hover:shadow-xl hover:shadow-[#C9A882]/20 transition-all duration-300 cursor-pointer border hover:-translate-y-1 ${
+                  className={`group bg-[var(--bg-card)] rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border hover:-translate-y-1 ${
                     activeCategory === cat.slug 
-                      ? 'border-[#B08968] bg-[#F5E6D3]/50' 
-                      : 'border-[#E8D4BA]/40'
+                      ? 'border-[var(--accent)] bg-[var(--bg-secondary)]' 
+                      : 'border-[var(--border)]'
                   }`}
                 >
                   <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">{cat.icon}</div>
-                  <div className="font-semibold text-[#2D2A26]">{cat.name}</div>
-                  <div className="text-sm text-[#8B8279] mt-2">
+                  <div className="font-semibold text-[var(--text-primary)]">{cat.name}</div>
+                  <div className="text-sm text-[var(--text-muted)] mt-2">
                     {cat.materials_count || 0} материалов
                   </div>
                 </button>

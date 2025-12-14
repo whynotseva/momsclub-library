@@ -21,9 +21,9 @@ export function CategoryFilter({
   const buttonBase =
     'flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300'
   const buttonActive =
-    'bg-gradient-to-r from-[#B08968] to-[#A67C52] text-white shadow-lg shadow-[#B08968]/25 scale-[1.02]'
+    'bg-gradient-to-r from-[var(--accent)] to-[var(--accent-hover)] text-white shadow-lg scale-[1.02]'
   const buttonInactive =
-    'bg-white/90 text-[#5C5650] hover:bg-[#F5E6D3] border border-[#E8D4BA]/40 hover:border-[#B08968]/50 hover:shadow-md'
+    'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] border border-[var(--border)] hover:border-[var(--accent)] hover:shadow-md'
 
   return (
     <div className="mb-10">
@@ -61,7 +61,7 @@ export function CategoryFilter({
           className={`col-span-2 md:col-span-4 ${buttonBase} ${
             activeCategory === 'featured'
               ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-lg shadow-amber-400/25 scale-[1.01]'
-              : 'bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200/60 hover:border-amber-400/50 hover:shadow-md'
+              : 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-700/40 hover:border-amber-400/50 hover:shadow-md'
           }`}
         >
           <span className="text-lg">⭐</span>
