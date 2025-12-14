@@ -1,10 +1,15 @@
 'use client'
 
 import Link from 'next/link'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] relative overflow-hidden flex items-center justify-center">
+    <div className="min-h-screen bg-[var(--bg-primary)] relative overflow-hidden flex items-center justify-center">
+      {/* Theme Toggle */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle size="sm" />
+      </div>
       {/* Premium gradient orbs */}
       <div className="fixed -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-[#E8D5C4]/30 via-[#D4C4B0]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="fixed -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-tr from-[#C9B89A]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -29,35 +34,35 @@ export default function NotFound() {
         </div>
 
         {/* Card */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl shadow-[#C9A882]/20 border border-[#E8D4BA]/40 p-8">
+        <div className="bg-[var(--bg-card)] backdrop-blur-sm rounded-3xl shadow-2xl border border-[var(--border)] p-8">
           {/* Icon */}
           <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-[#FAF6F1] to-[#F5EFE6] rounded-2xl flex items-center justify-center border border-[#E8D4BA]/30">
             <span className="text-4xl">🗺️</span>
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl font-bold text-[#2D2A26] mb-3">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-3">
             Упс, красотка! 🙈
           </h1>
           
-          <p className="text-[#5D4E3A] mb-6">
+          <p className="text-[var(--text-secondary)] mb-6">
             Кажется, эта страница решила поиграть в прятки. 
             Но не переживай — мы поможем тебе вернуться! 🩷
           </p>
 
           {/* Suggestions */}
-          <div className="bg-gradient-to-r from-[#FAF6F1] to-[#F5EFE6] rounded-2xl p-4 mb-6 border border-[#E8D4BA]/30">
-            <p className="text-sm text-[#8B8279] mb-3">Возможно, тебе будет интересно:</p>
+          <div className="bg-[var(--bg-secondary)] rounded-2xl p-4 mb-6 border border-[var(--border)]">
+            <p className="text-sm text-[var(--text-muted)] mb-3">Возможно, тебе будет интересно:</p>
             <div className="flex flex-wrap justify-center gap-2">
               <Link 
                 href="/"
-                className="px-3 py-1.5 bg-white rounded-full text-sm text-[#5D4E3A] border border-[#E8D4BA]/50 hover:border-[#B08968] hover:text-[#B08968] transition-colors"
+                className="px-3 py-1.5 bg-[var(--bg-card)] rounded-full text-sm text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
               >
                 📚 Библиотека
               </Link>
               <Link 
                 href="/profile"
-                className="px-3 py-1.5 bg-white rounded-full text-sm text-[#5D4E3A] border border-[#E8D4BA]/50 hover:border-[#B08968] hover:text-[#B08968] transition-colors"
+                className="px-3 py-1.5 bg-[var(--bg-card)] rounded-full text-sm text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
               >
                 👤 Профиль
               </Link>
@@ -67,7 +72,7 @@ export default function NotFound() {
           {/* Main button */}
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 w-full py-4 bg-gradient-to-r from-[#B08968] via-[#A67C52] to-[#96704A] text-white font-semibold rounded-xl shadow-lg shadow-[#B08968]/25 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+            className="inline-flex items-center justify-center gap-2 w-full py-4 bg-gradient-to-r from-[var(--accent)] via-[var(--accent-hover)] to-[var(--accent)] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

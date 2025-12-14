@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 export default function PaymentSuccessPage() {
   const [showConfetti, setShowConfetti] = useState(true)
@@ -12,7 +13,11 @@ export default function PaymentSuccessPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] relative overflow-hidden flex items-center justify-center">
+    <div className="min-h-screen bg-[var(--bg-primary)] relative overflow-hidden flex items-center justify-center">
+      {/* Theme Toggle */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle size="sm" />
+      </div>
       {/* Premium gradient orbs */}
       <div className="fixed -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-[#E8D5C4]/30 via-[#D4C4B0]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="fixed -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-tr from-[#C9B89A]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -41,7 +46,7 @@ export default function PaymentSuccessPage() {
 
       {/* Content */}
       <div className="relative z-10 max-w-lg w-full mx-4">
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl shadow-[#C9A882]/20 border border-[#E8D4BA]/40 p-5 sm:p-8 text-center">
+        <div className="bg-[var(--bg-card)] backdrop-blur-sm rounded-3xl shadow-2xl border border-[var(--border)] p-5 sm:p-8 text-center">
           {/* Success icon */}
           <div className="mb-4 sm:mb-6 relative">
             <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-400/30 animate-bounce-slow">
@@ -54,36 +59,36 @@ export default function PaymentSuccessPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#2D2A26] mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-2">
             Поздравляем, красотка! 🎉
           </h1>
           
-          <p className="text-base sm:text-lg text-[#5D4E3A] mb-4">
+          <p className="text-base sm:text-lg text-[var(--text-secondary)] mb-4">
             Платёж успешно прошёл 🩷
           </p>
 
           {/* Info card */}
-          <div className="bg-gradient-to-r from-[#FAF6F1] to-[#F5EFE6] rounded-xl p-4 mb-4 border border-[#E8D4BA]/30">
+          <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-4 border border-[var(--border)]">
             <div className="flex items-center justify-center gap-2 mb-2">
               <span className="text-xl">🎀</span>
-              <span className="font-semibold text-[#2D2A26] text-sm sm:text-base">Добро пожаловать в клуб!</span>
+              <span className="font-semibold text-[var(--text-primary)] text-sm sm:text-base">Добро пожаловать в клуб!</span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8B8279]">
+            <p className="text-xs sm:text-sm text-[var(--text-muted)]">
               Теперь тебе доступна библиотека и закрытый чат с девочками 💖
             </p>
           </div>
 
           {/* What's next - hidden on mobile */}
           <div className="hidden sm:block space-y-3 mb-6">
-            <p className="text-sm font-medium text-[#5D4E3A]">Что тебя ждёт? ✨</p>
+            <p className="text-sm font-medium text-[var(--text-secondary)]">Что тебя ждёт? ✨</p>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-xl p-3 border border-[#E8D4BA]/30 shadow-sm">
+              <div className="bg-[var(--bg-card)] rounded-xl p-3 border border-[var(--border)] shadow-sm">
                 <span className="text-xl mb-1 block">📚</span>
-                <span className="text-xs text-[#5D4E3A]">Библиотека материалов</span>
+                <span className="text-xs text-[var(--text-secondary)]">Библиотека материалов</span>
               </div>
-              <div className="bg-white rounded-xl p-3 border border-[#E8D4BA]/30 shadow-sm">
+              <div className="bg-[var(--bg-card)] rounded-xl p-3 border border-[var(--border)] shadow-sm">
                 <span className="text-xl mb-1 block">🩷</span>
-                <span className="text-xs text-[#5D4E3A]">Закрытый чат с девочками</span>
+                <span className="text-xs text-[var(--text-secondary)]">Закрытый чат с девочками</span>
               </div>
             </div>
           </div>
@@ -92,21 +97,21 @@ export default function PaymentSuccessPage() {
           <div className="space-y-2 sm:space-y-3">
             <Link
               href="/"
-              className="block w-full py-3 sm:py-4 bg-gradient-to-r from-[#B08968] via-[#A67C52] to-[#96704A] text-white font-semibold rounded-xl shadow-lg shadow-[#B08968]/25 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 text-center text-sm sm:text-base"
+              className="block w-full py-3 sm:py-4 bg-gradient-to-r from-[var(--accent)] via-[var(--accent-hover)] to-[var(--accent)] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 text-center text-sm sm:text-base"
             >
               📚 Перейти в библиотеку
             </Link>
             
             <Link
               href="/profile"
-              className="block w-full py-2.5 sm:py-3 bg-white text-[#B08968] font-medium rounded-xl border-2 border-[#E8D4BA] hover:border-[#B08968] hover:bg-[#FAF6F1] transition-all text-center text-sm sm:text-base"
+              className="block w-full py-2.5 sm:py-3 bg-[var(--bg-card)] text-[var(--accent)] font-medium rounded-xl border-2 border-[var(--border)] hover:border-[var(--accent)] transition-all text-center text-sm sm:text-base"
             >
               👤 Мой профиль
             </Link>
           </div>
 
           {/* Footer note - hidden on mobile */}
-          <p className="hidden sm:block mt-6 text-xs text-[#8B8279]">
+          <p className="hidden sm:block mt-6 text-xs text-[var(--text-muted)]">
             💌 Чек об оплате отправлен на твой email
           </p>
         </div>
