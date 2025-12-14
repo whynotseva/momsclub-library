@@ -4,7 +4,6 @@ import './globals.css'
 import WinterEffects from '@/components/WinterEffects'
 import InstallPrompt from '@/components/InstallPrompt'
 import ClientWrapper from '@/components/ClientWrapper'
-import { ThemeProvider } from '@/contexts/ThemeContext'
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] })
 
@@ -33,22 +32,19 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="ru">
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=2" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="theme-color" content="#FDFCFA" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#FDF8F3" />
       </head>
       <body className={inter.className}>
-        <ThemeProvider>
-          <WinterEffects />
-          <ClientWrapper>
-            {children}
-          </ClientWrapper>
-          <InstallPrompt />
-        </ThemeProvider>
+        <WinterEffects />
+        <ClientWrapper>
+          {children}
+        </ClientWrapper>
+        <InstallPrompt />
       </body>
     </html>
   )

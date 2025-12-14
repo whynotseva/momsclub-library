@@ -24,13 +24,13 @@ export function MobileNav({ activePage = 'library', isPWA = false, isVisible = t
       }`}
     >
       <div
-        className="flex items-center justify-around rounded-2xl px-2 py-3 shadow-2xl border border-[var(--border)]"
-        style={{ background: 'var(--bg-header)', backdropFilter: 'blur(24px) saturate(180%)' }}
+        className="flex items-center justify-around rounded-2xl px-2 py-3 shadow-2xl border border-white/50"
+        style={{ background: 'rgba(255,255,255,0.45)', backdropFilter: 'blur(24px) saturate(180%)' }}
       >
         {isPWA && (
           <button
             onClick={() => window.location.reload()}
-            className="p-2.5 rounded-xl text-[var(--accent)] hover:bg-[var(--bg-secondary)] transition-colors"
+            className="p-2.5 rounded-xl text-[#B08968] hover:bg-[#F5E6D3] transition-colors"
             title="Обновить"
           >
             <svg
@@ -57,8 +57,8 @@ export function MobileNav({ activePage = 'library', isPWA = false, isVisible = t
             href={item.href}
             className={`px-2 py-1.5 rounded-xl text-xs font-medium ${
               activePage === item.key
-                ? 'font-semibold bg-[var(--accent)] text-white shadow-md'
-                : 'text-[var(--text-muted)]'
+                ? 'font-semibold bg-[#B08968] text-white shadow-md'
+                : 'text-[#8B8279]'
             }`}
           >
             {item.label}

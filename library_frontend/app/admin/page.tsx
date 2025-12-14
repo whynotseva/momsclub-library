@@ -7,7 +7,6 @@ import { useAdminData } from '@/hooks/useAdminData'
 import { ADMIN_IDS, ADMIN_GROUP_INFO } from '@/lib/constants'
 import { Category, Material, Activity, AdminAction, AdminUser } from '@/lib/types'
 import { CategoriesTab, HistoryTab, UsersTab, MaterialsTab, MaterialFormModal, CategoryFormModal, StatsTab, UserDetailsModal } from '@/components/admin'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 export default function AdminPage() {
   // === ДАННЫЕ ИЗ ХУКА ===
@@ -490,14 +489,14 @@ export default function AdminPage() {
   // Загрузка
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] flex items-center justify-center">
         <div className="text-center">
           <img 
             src="/logolibrary.svg" 
             alt="LibriMomsClub" 
             className="h-20 sm:h-24 w-auto mx-auto mb-4 animate-pulse"
           />
-          <p className="text-[var(--text-muted)]">Загрузка...</p>
+          <p className="text-[#8B8279]">Загрузка...</p>
         </div>
       </div>
     )
@@ -506,18 +505,18 @@ export default function AdminPage() {
   // Нет доступа
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center p-4">
-        <div className="bg-[var(--bg-card)] backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-[var(--border)] text-center max-w-md">
+      <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] flex items-center justify-center p-4">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-[#E8D4BA]/30 text-center max-w-md">
           <div className="w-20 h-20 bg-gradient-to-br from-red-400 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <span className="text-4xl">🚫</span>
           </div>
-          <h1 className="text-2xl font-bold text-[var(--text-secondary)] mb-3">Доступ запрещён</h1>
-          <p className="text-[var(--text-muted)] mb-6">
+          <h1 className="text-2xl font-bold text-[#5D4E3A] mb-3">Доступ запрещён</h1>
+          <p className="text-[#8B8279] mb-6">
             Эта страница доступна только администраторам библиотеки.
           </p>
           <a 
             href="/library"
-            className="inline-block px-6 py-3 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-hover)] text-white rounded-xl font-medium hover:shadow-lg transition-all"
+            className="inline-block px-6 py-3 bg-gradient-to-r from-[#C9A882] to-[#B08968] text-white rounded-xl font-medium hover:shadow-lg transition-all"
           >
             Вернуться в библиотеку
           </a>
@@ -527,9 +526,9 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)]">
+    <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6]">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[var(--border)] shadow-lg" style={{ background: 'var(--bg-header)', backdropFilter: 'blur(20px) saturate(180%)', paddingTop: 'env(safe-area-inset-top)' }}>
+      <header className="sticky top-0 z-50 border-b border-white/50 shadow-lg" style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(20px) saturate(180%)', paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <img 
@@ -537,15 +536,12 @@ export default function AdminPage() {
               alt="LibriMomsClub" 
               className="h-10 w-auto"
             />
-            <div className="flex items-center gap-3">
-              <ThemeToggle size="sm" />
-              <a 
-                href="/library"
-                className="px-4 py-2.5 bg-gradient-to-r from-[var(--accent)] to-[var(--accent-hover)] text-white rounded-xl font-medium text-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2"
-              >
-                <span>📚</span> В библиотеку
-              </a>
-            </div>
+            <a 
+              href="/library"
+              className="px-4 py-2.5 bg-gradient-to-r from-[#C9A882] to-[#B08968] text-white rounded-xl font-medium text-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2"
+            >
+              <span>📚</span> В библиотеку
+            </a>
           </div>
         </div>
       </header>
@@ -553,7 +549,7 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Приветственный блок */}
         {adminUser && (
-          <div className="mb-6 bg-[var(--bg-card)] backdrop-blur-xl rounded-2xl p-5 border border-[var(--border)]">
+          <div className="mb-6 bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-[#E8D4BA]/30">
             <div className="flex items-center gap-4">
               {adminUser.photo_url ? (
                 <img 
@@ -562,17 +558,17 @@ export default function AdminPage() {
                   className="w-14 h-14 rounded-2xl object-cover shadow-lg"
                 />
               ) : (
-                <div className="w-14 h-14 bg-gradient-to-br from-[var(--accent)] to-[var(--accent-hover)] rounded-2xl flex items-center justify-center text-2xl shadow-lg text-white font-bold">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#C9A882] to-[#B08968] rounded-2xl flex items-center justify-center text-2xl shadow-lg text-white font-bold">
                   {adminUser.first_name?.charAt(0) || '?'}
                 </div>
               )}
               <div>
-                <p className="text-xs text-[var(--accent)] font-medium uppercase tracking-wide mb-0.5">Панель администратора</p>
-                <h2 className="text-xl font-bold text-[var(--text-secondary)]">
+                <p className="text-xs text-[#B08968] font-medium uppercase tracking-wide mb-0.5">Панель администратора</p>
+                <h2 className="text-xl font-bold text-[#5D4E3A]">
                   Привет, {adminUser.first_name || 'Админ'}! 👋
                 </h2>
                 {adminUser.admin_group && ADMIN_GROUP_INFO[adminUser.admin_group] && (
-                  <p className="text-sm text-[var(--text-muted)] flex items-center gap-1.5 mt-0.5">
+                  <p className="text-sm text-[#8B8279] flex items-center gap-1.5 mt-0.5">
                     <span>{ADMIN_GROUP_INFO[adminUser.admin_group].emoji}</span>
                     <span>{ADMIN_GROUP_INFO[adminUser.admin_group].name}</span>
                   </p>
@@ -583,7 +579,7 @@ export default function AdminPage() {
         )}
 
         {/* Tabs - только на десктопе */}
-        <div className="hidden sm:flex gap-2 mb-6 bg-[var(--bg-card)] backdrop-blur-lg rounded-2xl p-2 border border-[var(--border)] overflow-x-auto">
+        <div className="hidden sm:flex gap-2 mb-6 bg-white/60 backdrop-blur-lg rounded-2xl p-2 border border-[#E8D4BA]/20 overflow-x-auto">
           {[
             { id: 'stats', label: '📊', labelFull: 'Статистика' },
             { id: 'materials', label: '📚', labelFull: 'Материалы' },
@@ -596,8 +592,8 @@ export default function AdminPage() {
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex-1 min-w-0 px-4 py-3 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'bg-gradient-to-r from-[var(--accent)] to-[var(--accent-hover)] text-white shadow-lg'
-                  : 'text-[var(--text-muted)] hover:bg-[var(--bg-secondary)]'
+                  ? 'bg-gradient-to-r from-[#C9A882] to-[#B08968] text-white shadow-lg'
+                  : 'text-[#8B8279] hover:bg-white/50'
               }`}
             >
               {tab.label} {tab.labelFull}

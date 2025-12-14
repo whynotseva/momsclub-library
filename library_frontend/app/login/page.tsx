@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -102,7 +101,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] relative overflow-hidden">
       {/* Premium gradient orbs */}
       <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-[#E8D5C4]/40 via-[#D4C4B0]/20 to-transparent rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-tr from-[#C9B89A]/20 to-transparent rounded-full blur-3xl"></div>
@@ -124,17 +123,14 @@ export default function LoginPage() {
               <span className="absolute -top-3 -left-1 text-2xl transform -rotate-12">🎅</span>
             </a>
             
-            <div className="flex items-center gap-3">
-              <ThemeToggle size="sm" />
-              <a 
-                href="https://t.me/momsclubsupport"
-                target="_blank"
-                rel="noopener noreferrer" 
-                className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all duration-300 hover:scale-105"
-              >
-                Нужна помощь?
-              </a>
-            </div>
+            <a 
+              href="https://t.me/momsclubsupport"
+              target="_blank"
+              rel="noopener noreferrer" 
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-300 hover:scale-105"
+            >
+              Нужна помощь?
+            </a>
           </div>
         </header>
 
@@ -152,7 +148,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-6">
-                <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold text-[var(--text-primary)] leading-[1.1] tracking-tight">
+                <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold text-[#2D2A26] leading-[1.1] tracking-tight">
                   Библиотека<br />
                   для роста<br />
                   <span className="relative inline-block">
@@ -163,7 +159,7 @@ export default function LoginPage() {
                   </span>
                 </h1>
                 
-                <p className="text-lg text-[var(--text-secondary)] leading-relaxed max-w-lg">
+                <p className="text-lg text-[#5C5650] leading-relaxed max-w-lg">
                   Эксклюзивные материалы, проверенные стратегии и готовые идеи для контента от профессионалов
                 </p>
               </div>
@@ -206,13 +202,13 @@ export default function LoginPage() {
             <div className="lg:pl-8">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#C9A882]/5 to-[#B08968]/5 rounded-3xl blur-xl"></div>
-                <div className="relative bg-[var(--bg-card)] backdrop-blur-sm rounded-3xl shadow-2xl border border-[var(--border)] p-10">
+                <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl shadow-[#C9A882]/15 border border-[#E8D4BA]/50 p-10">
                 <div className="space-y-6">
                   <div className="text-center">
-                    <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-3">
+                    <h2 className="text-3xl font-bold text-[#2D2A26] mb-3">
                       Войти в библиотеку
                     </h2>
-                    <p className="text-[var(--text-muted)]">
+                    <p className="text-[#8B8279]">
                       Используйте Telegram для быстрого входа
                     </p>
                   </div>
@@ -306,12 +302,12 @@ export default function LoginPage() {
         </main>
 
         {/* Footer */}
-        <footer className="w-full px-6 py-2 border-t border-[var(--border)]">
-          <div className="max-w-7xl mx-auto flex items-center justify-between text-sm text-[var(--text-muted)]">
+        <footer className="w-full px-6 py-2 border-t border-gray-200/50">
+          <div className="max-w-7xl mx-auto flex items-center justify-between text-sm text-gray-600">
             <p>© 2025 MomsClub. Все права защищены.</p>
             <div className="flex items-center space-x-6">
-              <a href="/privacy" className="hover:text-[var(--text-primary)] transition-colors">Политика</a>
-              <a href="/terms" className="hover:text-[var(--text-primary)] transition-colors">Условия</a>
+              <a href="/privacy" className="hover:text-gray-900 transition-colors">Политика</a>
+              <a href="/terms" className="hover:text-gray-900 transition-colors">Условия</a>
             </div>
           </div>
         </footer>

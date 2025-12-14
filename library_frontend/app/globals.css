@@ -2,50 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ==================== ТЁМНАЯ ТЕМА ==================== */
-:root {
-  /* Светлая тема */
-  --bg-primary: #FDFCFA;
-  --bg-secondary: #F5E6D3;
-  --bg-card: rgba(255, 255, 255, 0.9);
-  --bg-header: rgba(255, 255, 255, 0.55);
-  --text-primary: #2D2A26;
-  --text-secondary: #5D4E3A;
-  --text-muted: #8B8279;
-  --accent: #B08968;
-  --accent-hover: #A67C52;
-  --border: #E8D4BA;
-  --shadow: rgba(0, 0, 0, 0.1);
-}
-
-.dark {
-  /* Тёмная тема */
-  --bg-primary: #121212;
-  --bg-secondary: #1E1E1E;
-  --bg-card: rgba(30, 30, 30, 0.95);
-  --bg-header: rgba(18, 18, 18, 0.85);
-  --text-primary: #E5E5E5;
-  --text-secondary: #B0B0B0;
-  --text-muted: #707070;
-  --accent: #C9A882;
-  --accent-hover: #D4B896;
-  --border: #3D3D3D;
-  --shadow: rgba(0, 0, 0, 0.4);
-}
-
-/* Плавный переход темы */
-html {
-  transition: background-color 0.3s ease;
-}
-
-html.dark {
-  color-scheme: dark;
-}
-/* ==================== /ТЁМНАЯ ТЕМА ==================== */
-
 @layer base {
   body {
-    @apply bg-[--bg-primary] text-[--text-primary];
+    @apply bg-[#FDFCFA] text-gray-900;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
@@ -268,5 +227,5 @@ html.dark {
 
 /* Цвет overscroll для iOS */
 html, body {
-  background-color: var(--bg-primary) !important;
+  background-color: #FDFCFA !important;
 }
