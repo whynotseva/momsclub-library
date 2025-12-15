@@ -36,9 +36,6 @@ def verify_telegram_auth(auth_data: Dict[str, Any]) -> bool:
         f'{k}={v}' for k, v in sorted(filtered_data.items())
     ])
     
-    print(f"📝 Data check string: {data_check_string[:100]}...")
-    print(f"🔑 Bot token (first 10): {settings.TELEGRAM_BOT_TOKEN[:10]}...")
-    
     # Создаём секретный ключ из bot token
     secret_key = hashlib.sha256(settings.TELEGRAM_BOT_TOKEN.encode()).digest()
     
@@ -48,9 +45,6 @@ def verify_telegram_auth(auth_data: Dict[str, Any]) -> bool:
         data_check_string.encode(),
         hashlib.sha256
     ).hexdigest()
-    
-    print(f"🧮 Calculated: {calculated_hash[:20]}...")
-    print(f"📨 Received:   {check_hash[:20]}...")
     
     # Сравниваем
     return calculated_hash == check_hash

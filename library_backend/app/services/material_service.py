@@ -58,7 +58,7 @@ class MaterialService:
         include_drafts: bool = False,
         is_admin: bool = False,
         page: int = 1,
-        page_size: int = 10000,
+        page_size: int = 50,
         sort: str = "created_desc"
     ) -> Dict[str, Any]:
         """

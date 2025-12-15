@@ -104,7 +104,7 @@ export function useAdminData() {
   const loadMaterials = useCallback(async () => {
     setLoadingMaterials(true)
     try {
-      const response = await api.get('/materials?include_drafts=true')
+      const response = await api.get('/materials?include_drafts=true&page_size=200')
       setMaterials(response.data.items || [])
     } catch (error) {
       console.error('Error loading materials:', error)

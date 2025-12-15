@@ -44,7 +44,7 @@ def get_materials(
     
     # Пагинация
     page: int = Query(1, ge=1, description="Номер страницы"),
-    page_size: int = Query(10000, ge=1, le=10000, description="Размер страницы"),
+    page_size: int = Query(50, ge=1, le=200, description="Размер страницы"),
     
     # Сортировка
     sort: str = Query("created_desc", description="Сортировка"),
@@ -520,6 +520,7 @@ def delete_material(
     material_id_for_log = material.id
     
     db.delete(material)
+    db.commit()
     
     # Логируем действие
     log_admin_action(db, current_user, 'delete', 'material', material_id_for_log, material_title, background_tasks)

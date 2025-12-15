@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
 import { ADMIN_IDS, DEFAULT_USER } from '@/lib/constants'
 import { Notification, Material, Category } from '@/lib/types'
+
+const PAGE_SIZE = 30
 
 /**
  * Хук для загрузки всех данных библиотеки
@@ -20,6 +22,10 @@ export function useLibraryData() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [materials, setMaterials] = useState<Material[]>([])
   const [apiCategories, setApiCategories] = useState<Category[]>([])
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const loadingMoreRef = useRef(false)
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set())
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [recommendations, setRecommendations] = useState<{type: string, title: string, materials: Material[]}>({type: '', title: '', materials: []})
@@ -105,14 +111,17 @@ export function useLibraryData() {
         console.error('Error loading categories:', error)
       }
 
-      // Загружаем материалы
+      // Загружаем материалы (первая страница)
       try {
-        const matResponse = await api.get('/materials')
+        const matResponse = await api.get('/materials', { params: { page: 1, page_size: PAGE_SIZE } })
         const items = matResponse.data.items || []
+        const total = matResponse.data.total || 0
         setMaterials(items)
+        setPage(2)
+        setHasMore(items.length === PAGE_SIZE && items.length < total)
         setUser(prev => ({
           ...prev,
-          totalMaterials: matResponse.data.total || items.length,
+          totalMaterials: total,
         }))
       } catch (error) {
         console.error('Error loading materials:', error)
@@ -245,9 +254,32 @@ export function useLibraryData() {
     }
   }
 
+  // Загрузить ещё материалы
+  const loadMoreMaterials = useCallback(async () => {
+    if (loadingMoreRef.current || !hasMore) return
+    loadingMoreRef.current = true
+    setLoadingMore(true)
+    
+    try {
+      const matResponse = await api.get('/materials', { params: { page, page_size: PAGE_SIZE } })
+      const items = matResponse.data.items || []
+      const total = matResponse.data.total || 0
+      
+      setMaterials(prev => [...prev, ...items])
+      setPage(prev => prev + 1)
+      setHasMore(items.length === PAGE_SIZE && materials.length + items.length < total)
+    } catch (error) {
+      console.error('Error loading more materials:', error)
+    } finally {
+      setLoadingMore(false)
+      loadingMoreRef.current = false
+    }
+  }, [page, hasMore, materials.length])
+
   return {
     // Состояния
     loading,
+    loadingMore,
     hasSubscription,
     user,
     isAdmin,
@@ -257,6 +289,7 @@ export function useLibraryData() {
     notifications,
     recommendations,
     router,
+    hasMore,
     
     // Функции
     setUser,
@@ -266,5 +299,6 @@ export function useLibraryData() {
     markAsRead,
     openMaterial,
     toggleFavorite,
+    loadMoreMaterials,
   }
 }

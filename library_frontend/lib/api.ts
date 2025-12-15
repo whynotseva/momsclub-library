@@ -43,11 +43,13 @@ export const api = axios.create({
   timeout: 30000, // 30 секунд таймаут
 });
 
-// Добавляем токен к каждому запросу
+// Добавляем токен к каждому запросу (только в браузере)
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
