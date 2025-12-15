@@ -22,16 +22,6 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ) -> dict:
-    """
-    Получить текущего пользователя из JWT токена
-    
-    Returns:
-        dict: {'telegram_id': int, 'user_id': int, 'first_name': str, ...}
-    
-    Raises:
-        HTTPException: Если токен невалидный или пользователь не найден
-    """
-    # Декодируем токен
     payload = decode_access_token(credentials.credentials)
     telegram_id = payload.get("telegram_id")
     
@@ -41,7 +31,6 @@ def get_current_user(
             detail="Невалидный токен"
         )
     
-    # Проверяем, что пользователь существует в БД
     result = db.execute(
         text("SELECT id, telegram_id, first_name, username, photo_url, current_loyalty_level, admin_group FROM users WHERE telegram_id = :tg_id"),
         {"tg_id": telegram_id}
@@ -68,16 +57,8 @@ def get_current_user_with_subscription(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> dict:
-    """
-    Получить текущего пользователя и проверить активную подписку
+    print(f"🔍 Checking subscription for user_id={current_user['user_id']}")
     
-    Returns:
-        dict: {'telegram_id': int, 'user_id': int, 'subscription': {...}}
-    
-    Raises:
-        HTTPException: Если подписка неактивна
-    """
-    # Проверяем активную подписку
     result = db.execute(
         text("""
         SELECT 
@@ -94,7 +75,10 @@ def get_current_user_with_subscription(
         {"user_id": current_user["user_id"]}
     ).fetchone()
     
+    print(f"🔍 Subscription result: {result}")
+    
     if not result:
+        print(f"❌ No active subscription for user_id={current_user['user_id']}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="У вас нет активной подписки MomsClub"
@@ -113,13 +97,6 @@ def get_optional_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
     db: Session = Depends(get_db)
 ) -> Optional[dict]:
-    """
-    Получить пользователя, если токен предоставлен (опционально)
-    Используется для публичных endpoint'ов, где авторизация не обязательна
-    
-    Returns:
-        dict или None
-    """
     if not credentials:
         return None
     
