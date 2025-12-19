@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, CreditCard, Star, Users, BarChart3, Check, XCircle, RefreshCw, Circle } from 'lucide-react'
+import { X, CreditCard, Star, Users, BarChart3, Check, XCircle, RefreshCw } from 'lucide-react'
 
 interface UserCard {
   id: number
