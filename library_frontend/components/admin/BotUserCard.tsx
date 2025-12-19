@@ -45,12 +45,6 @@ const LEVELS: Record<string, string> = {
   none: 'Нет', silver: 'Silver', gold: 'Gold', platinum: 'Platinum'
 }
 
-const LEVEL_COLORS: Record<string, string> = {
-  none: 'text-gray-400',
-  silver: 'text-gray-500',
-  gold: 'text-yellow-500',
-  platinum: 'text-purple-500'
-}
 
 export function BotUserCard({ user, onClose, onRefresh, api }: Props) {
   const [days, setDays] = useState(7)

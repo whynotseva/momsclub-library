@@ -2,7 +2,7 @@
 
 import { ADMIN_GROUP_INFO } from '@/lib/constants'
 import { Avatar } from '@/components/shared'
-import { BookOpen, Eye, Star, FolderOpen, Bell, BellOff, Trophy, ClipboardList, Users, Settings, Heart, HeartOff } from 'lucide-react'
+import { BookOpen, Eye, Star, FolderOpen, Bell, BellOff, Trophy, ClipboardList, Users, Settings, HeartOff } from 'lucide-react'
 
 // Типы
 interface OnlineUser {
