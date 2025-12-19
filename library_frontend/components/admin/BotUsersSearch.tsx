@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Loader2 } from 'lucide-react'
+import { Search, Loader2, Circle, Check } from 'lucide-react'
 
 interface SearchResult {
   telegram_id: number
@@ -18,8 +18,11 @@ interface Props {
   onSelectUser: (telegramId: number) => void
 }
 
-const LEVELS: Record<string, string> = {
-  none: '⚪', silver: '🥈', gold: '🥇', platinum: '💎'
+const LEVEL_COLORS: Record<string, string> = {
+  none: 'text-gray-400',
+  silver: 'text-gray-500', 
+  gold: 'text-yellow-500',
+  platinum: 'text-purple-500'
 }
 
 export function BotUsersSearch({ api, onSelectUser }: Props) {
@@ -48,7 +51,7 @@ export function BotUsersSearch({ api, onSelectUser }: Props) {
   return (
     <div className="bg-white/80 dark:bg-[#1E1E1E]/80 backdrop-blur-xl rounded-2xl border border-[#E8D4BA]/30 dark:border-[#3D3D3D] overflow-hidden">
       <div className="p-4 border-b border-[#E8D4BA]/30 dark:border-[#3D3D3D]">
-        <h3 className="font-medium text-[#5D4E3A] dark:text-[#E5E5E5] mb-3">🔍 Поиск пользователей бота</h3>
+        <h3 className="font-medium text-[#5D4E3A] dark:text-[#E5E5E5] mb-3 flex items-center gap-2"><Search className="w-4 h-4 text-[#B08968]" /> Поиск пользователей бота</h3>
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8B8279] dark:text-[#707070]" />
@@ -85,8 +88,8 @@ export function BotUsersSearch({ api, onSelectUser }: Props) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">{user.first_name || 'Без имени'}</span>
-                  <span>{LEVELS[user.loyalty_level] || '⚪'}</span>
-                  {user.has_active_subscription && <span className="text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">✅</span>}
+                  <Circle className={`w-3 h-3 ${LEVEL_COLORS[user.loyalty_level] || 'text-gray-400'}`} fill="currentColor" />
+                  {user.has_active_subscription && <span className="text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded flex items-center gap-0.5"><Check className="w-3 h-3" /></span>}
                 </div>
                 {user.username && <p className="text-sm text-[#8B8279] dark:text-[#707070]">@{user.username}</p>}
               </div>

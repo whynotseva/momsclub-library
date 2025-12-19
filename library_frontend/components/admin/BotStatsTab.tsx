@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, CreditCard, Clock, Wallet, TrendingUp, RefreshCw } from 'lucide-react'
+import { Users, CreditCard, Clock, Wallet, TrendingUp, RefreshCw, ClipboardList, Check, XCircle, AlertCircle, Banknote } from 'lucide-react'
 
 interface BotStats {
   total_users: number
@@ -117,12 +117,12 @@ export function BotStatsTab({ api, onSelectUser }: Props) {
       {/* Subscriptions */}
       <div className="bg-white/80 dark:bg-[#1E1E1E]/80 backdrop-blur-xl rounded-2xl border border-[#E8D4BA]/30 dark:border-[#3D3D3D] overflow-hidden">
         <div className="p-4 border-b border-[#E8D4BA]/30 dark:border-[#3D3D3D] flex items-center justify-between">
-          <h3 className="font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">📋 Подписки</h3>
+          <h3 className="font-medium text-[#5D4E3A] dark:text-[#E5E5E5] flex items-center gap-2"><ClipboardList className="w-4 h-4 text-[#B08968]" /> Подписки</h3>
           <div className="flex gap-1">
             {(['expiring', 'active', 'expired'] as const).map(f => (
               <button key={f} onClick={() => setSubFilter(f)}
                 className={`px-3 py-1 rounded-lg text-xs ${subFilter === f ? 'bg-[#B08968] text-white' : 'bg-[#F5E6D3]/50 dark:bg-[#2A2A2A] text-[#8B8279] dark:text-[#B0B0B0]'}`}>
-                {f === 'expiring' ? '⏰ Скоро' : f === 'active' ? '✅ Активные' : '❌ Истекшие'}
+                {f === 'expiring' ? <><AlertCircle className="w-3 h-3 inline" /> Скоро</> : f === 'active' ? <><Check className="w-3 h-3 inline" /> Активные</> : <><XCircle className="w-3 h-3 inline" /> Истекшие</>}
               </button>
             ))}
           </div>
@@ -134,7 +134,7 @@ export function BotStatsTab({ api, onSelectUser }: Props) {
               <div>
                 <span className="font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">{s.first_name || 'Без имени'}</span>
                 {s.username && <span className="text-sm text-[#8B8279] dark:text-[#707070] ml-2">@{s.username}</span>}
-                {s.is_recurring_active && <span className="ml-2 text-xs">🔄</span>}
+                {s.is_recurring_active && <RefreshCw className="ml-2 w-3 h-3 text-blue-500 inline" />}
               </div>
               <div className="text-right text-sm">
                 <div className={s.days_left <= 3 ? 'text-red-500 font-medium' : 'text-[#5D4E3A] dark:text-[#E5E5E5]'}>
@@ -151,7 +151,7 @@ export function BotStatsTab({ api, onSelectUser }: Props) {
       {/* Withdrawals */}
       <div className="bg-white/80 dark:bg-[#1E1E1E]/80 backdrop-blur-xl rounded-2xl border border-[#E8D4BA]/30 dark:border-[#3D3D3D] overflow-hidden">
         <div className="p-4 border-b border-[#E8D4BA]/30 dark:border-[#3D3D3D]">
-          <h3 className="font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">💰 Заявки на вывод ({withdrawals.length})</h3>
+          <h3 className="font-medium text-[#5D4E3A] dark:text-[#E5E5E5] flex items-center gap-2"><Banknote className="w-4 h-4 text-[#B08968]" /> Заявки на вывод ({withdrawals.length})</h3>
         </div>
         <div className="divide-y divide-[#E8D4BA]/20 dark:divide-[#3D3D3D]">
           {withdrawals.map(w => (
@@ -169,11 +169,11 @@ export function BotStatsTab({ api, onSelectUser }: Props) {
               <div className="flex gap-2">
                 <button onClick={() => handleApprove(w.id)} disabled={loading}
                   className="flex-1 py-2 bg-green-500 text-white rounded-xl text-sm font-medium hover:bg-green-600 disabled:opacity-50">
-                  ✅ Одобрить
+                  <Check className="w-4 h-4 inline" /> Одобрить
                 </button>
                 <button onClick={() => handleReject(w.id)} disabled={loading}
                   className="flex-1 py-2 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 disabled:opacity-50">
-                  ❌ Отклонить
+                  <XCircle className="w-4 h-4 inline" /> Отклонить
                 </button>
               </div>
             </div>

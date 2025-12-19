@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { Bell, BellOff, Clock, Eye, Star } from 'lucide-react'
 
 interface UserStats {
   users: Array<{
@@ -64,7 +65,7 @@ export function UsersTab({ usersStats, onLoadUserDetails, onCopyUsername, copied
             <h3 className="font-medium text-[#5D4E3A]">Пользователи библиотеки</h3>
             {usersStats && (
               <span className="text-sm text-[#8B8279]">
-                {usersStats.total} чел • {usersStats.with_push} 🔔
+                <>{usersStats.total} чел • {usersStats.with_push} <Bell className="w-3 h-3 inline" /></>
               </span>
             )}
           </div>
@@ -81,8 +82,8 @@ export function UsersTab({ usersStats, onLoadUserDetails, onCopyUsername, copied
                 }`}
               >
                 {filter === 'all' && 'Все'}
-                {filter === 'with_push' && '🔔 Push'}
-                {filter === 'no_push' && '⚪ Без'}
+                {filter === 'with_push' && <><Bell className="w-3 h-3 inline" /> Push</>}
+                {filter === 'no_push' && <><BellOff className="w-3 h-3 inline" /> Без</>}
               </button>
             ))}
             <span className="text-[#E8D4BA] self-center">|</span>
@@ -96,9 +97,9 @@ export function UsersTab({ usersStats, onLoadUserDetails, onCopyUsername, copied
                     : 'bg-[#F5E6D3]/50 text-[#8B8279] hover:bg-[#F5E6D3]'
                 }`}
               >
-                {sort === 'recent' && '🕐 Недавние'}
-                {sort === 'most_views' && '👁 Больше'}
-                {sort === 'least_views' && '👁 Меньше'}
+                {sort === 'recent' && <><Clock className="w-3 h-3 inline" /> Недавние</>}
+                {sort === 'most_views' && <><Eye className="w-3 h-3 inline" /> Больше</>}
+                {sort === 'least_views' && <><Eye className="w-3 h-3 inline" /> Меньше</>}
               </button>
             ))}
           </div>
@@ -121,7 +122,7 @@ export function UsersTab({ usersStats, onLoadUserDetails, onCopyUsername, copied
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-medium text-[#5D4E3A]">{user.first_name || 'Без имени'}</span>
-                <span className="text-sm">{user.has_push ? '🔔' : '⚪'}</span>
+                {user.has_push ? <Bell className="w-4 h-4 text-[#B08968]" /> : <BellOff className="w-4 h-4 text-gray-300" />}
               </div>
               {user.username && (
                 <button
@@ -133,8 +134,8 @@ export function UsersTab({ usersStats, onLoadUserDetails, onCopyUsername, copied
               )}
             </div>
             <div className="text-right text-sm">
-              <p className="text-[#5D4E3A]">{user.views_count} 👁</p>
-              <p className="text-[#8B8279]">{user.favorites_count} ⭐</p>
+              <p className="text-[#5D4E3A] flex items-center gap-1">{user.views_count} <Eye className="w-3 h-3" /></p>
+              <p className="text-[#8B8279] flex items-center gap-1">{user.favorites_count} <Star className="w-3 h-3" /></p>
             </div>
           </div>
         ))}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { Search, BookOpen, Upload, Check, Pencil, Trash2, Eye } from 'lucide-react'
 
 interface Category {
   id: number
@@ -125,7 +126,7 @@ export function MaterialsTab({
       ) : filteredMaterials.length === 0 ? (
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-12 border border-[#E8D4BA]/30 text-center">
           <div className="w-16 h-16 bg-[#F5E6D3] rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">{materialsSearch ? '🔍' : '📚'}</span>
+            {materialsSearch ? <Search className="w-8 h-8 text-[#B08968]" /> : <BookOpen className="w-8 h-8 text-[#B08968]" />}
           </div>
           <h3 className="text-lg font-medium text-[#5D4E3A] mb-2">
             {materialsSearch ? 'Ничего не найдено' : 'Пока нет материалов'}
@@ -169,7 +170,7 @@ export function MaterialsTab({
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#8B8279]">👁 {material.views}</span>
+                  <span className="text-xs text-[#8B8279] flex items-center gap-1"><Eye className="w-3 h-3" /> {material.views}</span>
                   <div className="flex gap-2">
                     <button
                       onClick={() => onTogglePublish(material)}
@@ -237,19 +238,19 @@ export function MaterialsTab({
                             : 'text-green-600 hover:bg-green-50'
                         }`}
                       >
-                        {material.is_published ? '📤 Снять' : '✅ Опубликовать'}
+                        {material.is_published ? <><Upload className="w-3 h-3 inline" /> Снять</> : <><Check className="w-3 h-3 inline" /> Опубликовать</>}
                       </button>
                       <button
                         onClick={() => onEdit(material)}
                         className="px-3 py-1 text-sm text-[#B08968] hover:bg-[#F5E6D3] rounded-lg"
                       >
-                        ✏️ Редактировать
+                        <Pencil className="w-3 h-3 inline" /> Редактировать
                       </button>
                       <button
                         onClick={() => onDelete(material.id)}
                         className="px-3 py-1 text-sm text-red-500 hover:bg-red-50 rounded-lg"
                       >
-                        🗑️ Удалить
+                        <Trash2 className="w-3 h-3 inline" /> Удалить
                       </button>
                     </td>
                   </tr>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, CreditCard, Star, Users, BarChart3, Check, XCircle, RefreshCw, Circle } from 'lucide-react'
 
 interface UserCard {
   id: number
@@ -42,7 +42,14 @@ interface Props {
 }
 
 const LEVELS: Record<string, string> = {
-  none: '⚪ Нет', silver: '🥈 Silver', gold: '🥇 Gold', platinum: '💎 Platinum'
+  none: 'Нет', silver: 'Silver', gold: 'Gold', platinum: 'Platinum'
+}
+
+const LEVEL_COLORS: Record<string, string> = {
+  none: 'text-gray-400',
+  silver: 'text-gray-500',
+  gold: 'text-yellow-500',
+  platinum: 'text-purple-500'
 }
 
 export function BotUserCard({ user, onClose, onRefresh, api }: Props) {
@@ -54,9 +61,9 @@ export function BotUserCard({ user, onClose, onRefresh, api }: Props) {
     setLoading(true)
     try {
       await api.post(`/admin/users/${user.telegram_id}/subscription/extend`, { days })
-      setMsg(`✅ +${days} дней`)
+      setMsg(`+${days} дней добавлено`)
       onRefresh()
-    } catch { setMsg('❌ Ошибка') }
+    } catch { setMsg('Ошибка') }
     setLoading(false)
   }
 
@@ -64,9 +71,9 @@ export function BotUserCard({ user, onClose, onRefresh, api }: Props) {
     setLoading(true)
     try {
       const r = await api.post(`/admin/users/${user.telegram_id}/autorenew/toggle`)
-      setMsg(`✅ Автопродление ${r.data.is_recurring_active ? 'вкл' : 'выкл'}`)
+      setMsg(`Автопродление ${r.data.is_recurring_active ? 'включено' : 'выключено'}`)
       onRefresh()
-    } catch { setMsg('❌ Ошибка') }
+    } catch { setMsg('Ошибка') }
     setLoading(false)
   }
 
@@ -74,9 +81,9 @@ export function BotUserCard({ user, onClose, onRefresh, api }: Props) {
     setLoading(true)
     try {
       await api.post(`/admin/users/${user.telegram_id}/loyalty/level`, { level })
-      setMsg(`✅ Уровень: ${LEVELS[level]}`)
+      setMsg(`Уровень: ${LEVELS[level]}`)
       onRefresh()
-    } catch { setMsg('❌ Ошибка') }
+    } catch { setMsg('Ошибка') }
     setLoading(false)
   }
 
@@ -90,7 +97,7 @@ export function BotUserCard({ user, onClose, onRefresh, api }: Props) {
             {user.username && <a href={`https://t.me/${user.username}`} target="_blank" className="text-sm text-[#B08968]">@{user.username}</a>}
             <div className="flex gap-2 mt-2 text-xs">
               <span className={`px-2 py-0.5 rounded-full ${user.has_active_subscription ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                {user.has_active_subscription ? '✅ Подписка' : '❌ Нет подписки'}
+                {user.has_active_subscription ? <><Check className="w-3 h-3 inline" /> Подписка</> : <><XCircle className="w-3 h-3 inline" /> Нет подписки</>}
               </span>
               <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#2A2A2A] dark:text-[#E5E5E5]">{LEVELS[user.loyalty.level]}</span>
             </div>
@@ -103,23 +110,23 @@ export function BotUserCard({ user, onClose, onRefresh, api }: Props) {
         <div className="p-4 space-y-4">
           {/* Подписка */}
           <section className="bg-[#FDFCFA] dark:bg-[#2A2A2A] rounded-xl p-3 border border-[#E8D4BA]/30 dark:border-[#3D3D3D]">
-            <h4 className="font-medium mb-2 dark:text-[#E5E5E5]">💳 Подписка</h4>
+            <h4 className="font-medium mb-2 dark:text-[#E5E5E5] flex items-center gap-2"><CreditCard className="w-4 h-4 text-[#B08968]" /> Подписка</h4>
             {user.subscription ? (
               <div className="text-sm space-y-1 dark:text-[#B0B0B0]">
                 <p>До: <b>{new Date(user.subscription.end_date).toLocaleDateString('ru-RU')}</b> ({user.subscription.days_left} дн)</p>
-                <p>Автопродление: {user.is_recurring_active ? '✅' : '❌'} (серия: {user.autopay_streak})</p>
+                <p className="flex items-center gap-1">Автопродление: {user.is_recurring_active ? <Check className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-400" />} (серия: {user.autopay_streak})</p>
               </div>
             ) : <p className="text-sm text-gray-500 dark:text-[#707070]">Нет подписки</p>}
             <div className="flex gap-2 mt-3">
               <input type="number" value={days} onChange={e => setDays(+e.target.value)} className="w-16 px-2 py-1 border dark:border-[#3D3D3D] rounded dark:bg-[#1E1E1E] dark:text-[#E5E5E5]" />
               <button onClick={extend} disabled={loading} className="px-3 py-1 bg-[#B08968] text-white rounded text-sm">+Дни</button>
-              <button onClick={toggleAuto} disabled={loading} className="px-3 py-1 bg-gray-200 dark:bg-[#3D3D3D] dark:text-[#E5E5E5] rounded text-sm">🔄 Авто</button>
+              <button onClick={toggleAuto} disabled={loading} className="px-3 py-1 bg-gray-200 dark:bg-[#3D3D3D] dark:text-[#E5E5E5] rounded text-sm flex items-center gap-1"><RefreshCw className="w-3 h-3" /> Авто</button>
             </div>
           </section>
 
           {/* Лояльность */}
           <section className="bg-[#FDFCFA] dark:bg-[#2A2A2A] rounded-xl p-3 border border-[#E8D4BA]/30 dark:border-[#3D3D3D]">
-            <h4 className="font-medium mb-2 dark:text-[#E5E5E5]">⭐ Лояльность</h4>
+            <h4 className="font-medium mb-2 dark:text-[#E5E5E5] flex items-center gap-2"><Star className="w-4 h-4 text-[#B08968]" /> Лояльность</h4>
             <p className="text-sm mb-2 dark:text-[#B0B0B0]">Текущий: {LEVELS[user.loyalty.level]} • В клубе: {user.loyalty.days_in_club} дн</p>
             <div className="flex gap-1 flex-wrap">
               {['none','silver','gold','platinum'].map(l => (
@@ -133,7 +140,7 @@ export function BotUserCard({ user, onClose, onRefresh, api }: Props) {
 
           {/* Рефералы */}
           <section className="bg-[#FDFCFA] dark:bg-[#2A2A2A] rounded-xl p-3 border border-[#E8D4BA]/30 dark:border-[#3D3D3D]">
-            <h4 className="font-medium mb-2 dark:text-[#E5E5E5]">👥 Рефералы</h4>
+            <h4 className="font-medium mb-2 dark:text-[#E5E5E5] flex items-center gap-2"><Users className="w-4 h-4 text-[#B08968]" /> Рефералы</h4>
             <div className="text-sm grid grid-cols-3 gap-2">
               <div className="text-center p-2 bg-white dark:bg-[#1E1E1E] rounded-lg">
                 <div className="font-bold dark:text-[#E5E5E5]">{user.referral.referrals_count}</div>
@@ -152,7 +159,7 @@ export function BotUserCard({ user, onClose, onRefresh, api }: Props) {
 
           {/* Статистика */}
           <section className="bg-[#FDFCFA] dark:bg-[#2A2A2A] rounded-xl p-3 border border-[#E8D4BA]/30 dark:border-[#3D3D3D]">
-            <h4 className="font-medium mb-2 dark:text-[#E5E5E5]">📊 Статистика</h4>
+            <h4 className="font-medium mb-2 dark:text-[#E5E5E5] flex items-center gap-2"><BarChart3 className="w-4 h-4 text-[#B08968]" /> Статистика</h4>
             <div className="text-sm dark:text-[#B0B0B0]">
               <p>Платежей: {user.total_payments_count} на {user.total_paid_amount}₽</p>
               <p>Достижений: {user.badges.length}</p>

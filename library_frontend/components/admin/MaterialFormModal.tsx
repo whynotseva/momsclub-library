@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { getLinkType } from '@/lib/utils'
+import { Star, Eye, FolderOpen, AlertTriangle, Image } from 'lucide-react'
 
 // Динамический импорт редактора
 const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), { 
@@ -299,7 +300,7 @@ function FormContent(props: FormContentProps) {
             className="w-5 h-5 rounded border-amber-300 text-amber-500 focus:ring-amber-300/30"
           />
           <div>
-            <span className="text-sm font-medium text-[#5D4E3A]">⭐ Выбор Полины</span>
+            <span className="text-sm font-medium text-[#5D4E3A] flex items-center gap-1"><Star className="w-4 h-4 text-amber-400" /> Выбор Полины</span>
             <p className="text-xs text-[#8B8279]">Покажется на главной</p>
           </div>
         </label>
@@ -334,7 +335,7 @@ function DesktopPreview({ formData, categories, formErrors }: {
   return (
     <div className="w-80 bg-gradient-to-b from-[#F9F6F2] to-[#F5E6D3]/30 border-l border-[#E8D4BA]/30 p-6 hidden lg:block">
       <div className="sticky top-6">
-        <h3 className="text-sm font-medium text-[#5D4E3A] mb-4">👁 Предпросмотр</h3>
+        <h3 className="text-sm font-medium text-[#5D4E3A] mb-4 flex items-center gap-2"><Eye className="w-4 h-4 text-[#B08968]" /> Предпросмотр</h3>
         
         <div className="bg-white rounded-2xl overflow-hidden shadow-lg border border-[#E8D4BA]/30">
           <div className="aspect-video bg-gradient-to-br from-[#F5E6D3] to-[#E8D4BA] relative overflow-hidden">
@@ -342,12 +343,12 @@ function DesktopPreview({ formData, categories, formErrors }: {
               <img src={formData.cover_image} alt="Превью" className="w-full h-full object-cover"/>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-4xl opacity-30">📷</span>
+                <Image className="w-10 h-10 text-[#B08968]/30" />
               </div>
             )}
             {formData.is_featured && (
               <div className="absolute top-2 right-2 px-2 py-1 bg-amber-400 rounded-lg text-xs font-medium text-white">
-                ⭐ Выбор Полины
+                <Star className="w-3 h-3 inline" /> Выбор Полины
               </div>
             )}
           </div>
@@ -374,7 +375,7 @@ function DesktopPreview({ formData, categories, formErrors }: {
               <span className={formData.is_published ? 'text-green-600' : 'text-orange-500'}>●</span>
               {' '}{formData.is_published ? 'Будет опубликован' : 'Черновик'}
             </p>
-            <p>📁 {formData.category_ids.length > 0 
+            <p className="flex items-center gap-1"><FolderOpen className="w-3 h-3" /> {formData.category_ids.length > 0 
               ? categories.filter(c => formData.category_ids.includes(c.id)).map(c => c.name).join(' • ')
               : 'Категория не выбрана'}</p>
           </div>
@@ -382,7 +383,7 @@ function DesktopPreview({ formData, categories, formErrors }: {
 
         {Object.keys(formErrors).length > 0 && (
           <div className="mt-4 p-3 bg-red-50 rounded-xl border border-red-200">
-            <p className="text-xs font-medium text-red-600 mb-1">⚠️ Заполните поля:</p>
+            <p className="text-xs font-medium text-red-600 mb-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Заполните поля:</p>
             <ul className="text-xs text-red-500 space-y-0.5">
               {Object.values(formErrors).map((err, i) => (
                 <li key={i}>• {err}</li>

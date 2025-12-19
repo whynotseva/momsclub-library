@@ -2,6 +2,7 @@
 
 import { ADMIN_GROUP_INFO } from '@/lib/constants'
 import { Avatar } from '@/components/shared'
+import { BookOpen, Eye, Star, FolderOpen, Bell, BellOff, Trophy, ClipboardList, Users, Settings, Heart, HeartOff } from 'lucide-react'
 
 // Типы
 interface OnlineUser {
@@ -121,7 +122,7 @@ export function StatsTab({
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 border border-[#E8D4BA]/30">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-medium text-[#5D4E3A] flex items-center gap-2">
-              <span className="text-lg">📚</span> В библиотеке
+              <BookOpen className="w-5 h-5 text-[#B08968]" /> В библиотеке
               <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-300'}`}></span>
             </h3>
             <span className="text-sm text-[#8B8279]">{libraryCount} онлайн</span>
@@ -145,8 +146,8 @@ export function StatsTab({
                       </button>
                     )}
                   </div>
-                  <span className="text-sm" title={pushSubscribers.includes(user.telegram_id) ? 'Push вкл' : 'Push выкл'}>
-                    {pushSubscribers.includes(user.telegram_id) ? '🔔' : '⚪'}
+                  <span title={pushSubscribers.includes(user.telegram_id) ? 'Push вкл' : 'Push выкл'}>
+                    {pushSubscribers.includes(user.telegram_id) ? <Bell className="w-4 h-4 text-[#B08968]" /> : <BellOff className="w-4 h-4 text-gray-300" />}
                   </span>
                 </div>
               ))}
@@ -163,7 +164,7 @@ export function StatsTab({
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 border border-[#E8D4BA]/30">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-medium text-[#5D4E3A] flex items-center gap-2">
-              <span className="text-lg">⚙️</span> В админке
+              <Settings className="w-5 h-5 text-[#B08968]" /> В админке
               <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-300'}`}></span>
             </h3>
             <span className="text-sm text-[#8B8279]">{adminCount} онлайн</span>
@@ -196,7 +197,7 @@ export function StatsTab({
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-[#E8D4BA]/30">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">📚</span>
+                <BookOpen className="w-6 h-6 text-white" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-[#5D4E3A]">{stats.materials.total}</p>
@@ -212,7 +213,7 @@ export function StatsTab({
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-[#E8D4BA]/30">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">👁</span>
+                <Eye className="w-6 h-6 text-white" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-[#5D4E3A]">{stats.views_total}</p>
@@ -224,7 +225,7 @@ export function StatsTab({
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-[#E8D4BA]/30">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-pink-500 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">⭐</span>
+                <Star className="w-6 h-6 text-white" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-[#5D4E3A]">{stats.favorites_total}</p>
@@ -236,7 +237,7 @@ export function StatsTab({
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-[#E8D4BA]/30">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">📁</span>
+                <FolderOpen className="w-6 h-6 text-white" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-[#5D4E3A]">{stats.categories_total}</p>
@@ -253,7 +254,7 @@ export function StatsTab({
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-[#E8D4BA]/30">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-[#5D4E3A] flex items-center gap-2">
-              <span>🔔</span> Push-рассылка
+              <Bell className="w-5 h-5 text-[#B08968]" /> Push-рассылка
             </h3>
             <span className="text-sm text-[#8B8279]">{usersStats?.with_push || 0} подписчиков</span>
           </div>
@@ -290,7 +291,7 @@ export function StatsTab({
                       !pushForm.targetUser ? 'bg-[#B08968] text-white' : 'bg-[#F5E6D3]/50 text-[#8B8279] hover:bg-[#F5E6D3]'
                     }`}
                   >
-                    👥 Всем ({usersStats?.with_push || 0})
+                    <Users className="w-4 h-4" /> Всем ({usersStats?.with_push || 0})
                   </button>
                 </div>
                 <div className="space-y-1 max-h-[150px] overflow-y-auto">
@@ -341,15 +342,15 @@ export function StatsTab({
         {/* Топ материалов */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-[#E8D4BA]/30">
           <h3 className="font-semibold text-[#5D4E3A] mb-4 flex items-center gap-2">
-            <span>🏆</span> Топ за неделю
+            <Trophy className="w-5 h-5 text-[#B08968]" /> Топ за неделю
           </h3>
           {analytics?.top_materials.length ? (
             <div className="space-y-2">
               {analytics.top_materials.map((m, i) => (
                 <div key={m.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#F5E6D3]/30">
-                  <span className="text-lg">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`}</span>
+                  <span className={`text-sm font-bold w-6 h-6 rounded-full flex items-center justify-center ${i === 0 ? 'bg-yellow-100 text-yellow-600' : i === 1 ? 'bg-gray-100 text-gray-500' : i === 2 ? 'bg-orange-100 text-orange-500' : 'bg-[#F5E6D3] text-[#8B8279]'}`}>{i + 1}</span>
                   <span className="flex-1 text-sm text-[#5D4E3A] truncate">{m.title}</span>
-                  <span className="text-sm text-[#8B8279]">{m.views} 👁</span>
+                  <span className="text-sm text-[#8B8279] flex items-center gap-1">{m.views} <Eye className="w-3 h-3" /></span>
                 </div>
               ))}
             </div>
@@ -363,7 +364,7 @@ export function StatsTab({
       {recentActivity.length > 0 && (
         <div className="mt-6 bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-[#E8D4BA]/30 overflow-hidden">
           <h3 className="font-semibold text-[#5D4E3A] mb-4 flex items-center gap-2">
-            <span>📋</span> Последние действия
+            <ClipboardList className="w-5 h-5 text-[#B08968]" /> Последние действия
           </h3>
           <div className="space-y-3 max-h-[400px] overflow-y-auto overflow-x-hidden">
             {recentActivity.map((activity, index) => (
@@ -406,10 +407,10 @@ export function StatsTab({
                       ? 'bg-gray-100 text-gray-600'
                       : 'bg-pink-100 text-pink-600'
                 }`}>
-                  {activity.type === 'view' && '👁'}
-                  {activity.type === 'favorite_add' && '⭐'}
-                  {activity.type === 'favorite_remove' && '💔'}
-                  {activity.type === 'favorite' && '⭐'}
+                  {activity.type === 'view' && <Eye className="w-4 h-4" />}
+                  {activity.type === 'favorite_add' && <Star className="w-4 h-4" />}
+                  {activity.type === 'favorite_remove' && <HeartOff className="w-4 h-4" />}
+                  {activity.type === 'favorite' && <Star className="w-4 h-4" />}
                 </div>
               </div>
             ))}

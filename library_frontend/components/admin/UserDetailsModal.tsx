@@ -1,5 +1,7 @@
 'use client'
 
+import { Bell, BellOff, Eye, Star, MessageCircle } from 'lucide-react'
+
 interface SelectedUser {
   user: {
     id: number
@@ -48,7 +50,7 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
               )}
               <div className="flex gap-2 mt-1">
                 <span className="text-xs px-2 py-0.5 rounded-full bg-[#F5E6D3]">
-                  {user.has_push ? '🔔 Push вкл' : '⚪ Push выкл'}
+                  {user.has_push ? <><Bell className="w-3 h-3 inline" /> Push вкл</> : <><BellOff className="w-3 h-3 inline" /> Push выкл</>}
                 </span>
                 {user.subscription_end && (
                   <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
@@ -64,7 +66,7 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
         <div className="p-5 space-y-4">
           {/* Последние просмотры */}
           <div>
-            <h4 className="font-medium text-[#5D4E3A] mb-2">👁 Последние просмотры</h4>
+            <h4 className="font-medium text-[#5D4E3A] mb-2 flex items-center gap-2"><Eye className="w-4 h-4 text-[#B08968]" /> Последние просмотры</h4>
             {user.views.length > 0 ? (
               <div className="space-y-1">
                 {user.views.slice(0, 5).map((v, i) => (
@@ -83,7 +85,7 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
 
           {/* Избранное */}
           <div>
-            <h4 className="font-medium text-[#5D4E3A] mb-2">⭐ Избранное ({user.favorites.length})</h4>
+            <h4 className="font-medium text-[#5D4E3A] mb-2 flex items-center gap-2"><Star className="w-4 h-4 text-[#B08968]" /> Избранное ({user.favorites.length})</h4>
             {user.favorites.length > 0 ? (
               <div className="flex flex-wrap gap-1">
                 {user.favorites.map((f, i) => (
@@ -107,7 +109,7 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
               rel="noopener noreferrer"
               className="flex-1 py-2 bg-[#0088cc] text-white rounded-xl font-medium text-center"
             >
-              💬 Написать в Telegram
+              <MessageCircle className="w-4 h-4 inline" /> Написать в Telegram
             </a>
           )}
           <button
