@@ -1,5 +1,7 @@
 'use client'
 
+import { Plus, Pencil, Trash2 } from 'lucide-react'
+
 interface Category {
   id: number
   name: string
@@ -29,7 +31,7 @@ export function CategoriesTab({ categories, onOpenForm, onDelete }: CategoriesTa
           onClick={() => onOpenForm()}
           className="px-5 py-2.5 bg-gradient-to-r from-[#C9A882] to-[#B08968] text-white rounded-xl font-medium hover:shadow-lg transition-all flex items-center gap-2"
         >
-          <span>➕</span> Добавить категорию
+          <Plus className="w-4 h-4" /> Добавить категорию
         </button>
       </div>
 
@@ -56,13 +58,13 @@ export function CategoriesTab({ categories, onOpenForm, onDelete }: CategoriesTa
                 onClick={() => onOpenForm(category)}
                 className="flex-1 px-3 py-2 text-sm text-[#B08968] bg-[#F5E6D3]/50 dark:bg-[#2A2A2A] rounded-lg hover:bg-[#F5E6D3] dark:hover:bg-[#3D3D3D] transition-colors"
               >
-                ✏️ Редактировать
+                <Pencil className="w-3 h-3 inline" /> Редактировать
               </button>
               <button 
                 onClick={() => onDelete(category.id)}
                 className="px-3 py-2 text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
               >
-                🗑️
+                <Trash2 className="w-4 h-4" />
               </button>
             </div>
           </div>

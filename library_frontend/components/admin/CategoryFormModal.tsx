@@ -52,14 +52,14 @@ export function CategoryFormModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center pt-16 sm:pt-0 sm:p-4 overscroll-none touch-none">
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md h-[85vh] sm:h-auto sm:max-h-[85vh] flex flex-col overflow-hidden touch-auto">
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md h-[85vh] sm:h-auto sm:max-h-[85vh] flex flex-col overflow-hidden touch-auto">
         {/* Индикатор для мобильных */}
         <div className="sm:hidden flex justify-center pt-3 pb-2 shrink-0">
-          <div className="w-10 h-1 bg-[#E8D4BA] rounded-full"></div>
+          <div className="w-10 h-1 bg-[#E8D4BA] dark:bg-[#3D3D3D] rounded-full"></div>
         </div>
         
-        <div className="border-b border-[#E8D4BA]/30 px-4 sm:px-6 py-3 sm:py-4 shrink-0">
-          <h2 className="text-lg sm:text-xl font-bold text-[#5D4E3A] text-center sm:text-left">
+        <div className="border-b border-[#E8D4BA]/30 dark:border-[#3D3D3D] px-4 sm:px-6 py-3 sm:py-4 shrink-0">
+          <h2 className="text-lg sm:text-xl font-bold text-[#5D4E3A] dark:text-[#E5E5E5] text-center sm:text-left">
             {editingCategory ? 'Редактировать категорию' : 'Новая категория'}
           </h2>
         </div>
@@ -67,7 +67,7 @@ export function CategoryFormModal({
         <form id="category-form" onSubmit={onSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           {/* Иконка */}
           <div>
-            <label className="block text-sm font-medium text-[#5D4E3A] mb-1.5">
+            <label className="block text-sm font-medium text-[#5D4E3A] dark:text-[#E5E5E5] mb-1.5">
               Иконка (эмодзи)
             </label>
             
@@ -78,10 +78,10 @@ export function CategoryFormModal({
                   key={emoji}
                   type="button"
                   onClick={() => onFormChange({...categoryForm, icon: emoji})}
-                  className={`w-10 h-10 rounded-xl text-xl hover:bg-[#F5E6D3] transition-all ${
+                  className={`w-10 h-10 rounded-xl text-xl hover:bg-[#F5E6D3] dark:hover:bg-[#2A2A2A] transition-all ${
                     categoryForm.icon === emoji 
                       ? 'bg-gradient-to-br from-[#C9A882] to-[#B08968] shadow-md scale-110' 
-                      : 'bg-[#F5E6D3]/50'
+                      : 'bg-[#F5E6D3]/50 dark:bg-[#2A2A2A]'
                   }`}
                 >
                   {emoji}
@@ -90,17 +90,17 @@ export function CategoryFormModal({
             </div>
 
             {/* Свой эмодзи */}
-            <div className="flex items-center gap-3 p-3 bg-[#F5E6D3]/30 rounded-xl">
-              <div className="w-14 h-14 bg-white border-2 border-dashed border-[#E8D4BA] rounded-xl flex items-center justify-center">
+            <div className="flex items-center gap-3 p-3 bg-[#F5E6D3]/30 dark:bg-[#2A2A2A] rounded-xl">
+              <div className="w-14 h-14 bg-white dark:bg-[#1E1E1E] border-2 border-dashed border-[#E8D4BA] dark:border-[#3D3D3D] rounded-xl flex items-center justify-center">
                 <span className="text-3xl">{categoryForm.icon || '?'}</span>
               </div>
               <div className="flex-1">
-                <label className="block text-xs text-[#8B8279] mb-1">Или введи свой эмодзи:</label>
+                <label className="block text-xs text-[#8B8279] dark:text-[#707070] mb-1">Или введи свой эмодзи:</label>
                 <input
                   type="text"
                   value={categoryForm.icon}
                   onChange={e => onFormChange({...categoryForm, icon: e.target.value})}
-                  className="w-full px-3 py-2 border border-[#E8D4BA]/50 rounded-lg text-center text-xl focus:ring-2 focus:ring-[#B08968]/30 focus:border-[#B08968] outline-none bg-white"
+                  className="w-full px-3 py-2 border border-[#E8D4BA]/50 dark:border-[#3D3D3D] rounded-lg text-center text-xl focus:ring-2 focus:ring-[#B08968]/30 focus:border-[#B08968] outline-none bg-white dark:bg-[#2A2A2A] dark:text-[#E5E5E5]"
                   placeholder="🎉"
                   maxLength={2}
                 />
@@ -110,14 +110,14 @@ export function CategoryFormModal({
 
           {/* Название */}
           <div>
-            <label className="block text-sm font-medium text-[#5D4E3A] mb-1.5">
+            <label className="block text-sm font-medium text-[#5D4E3A] dark:text-[#E5E5E5] mb-1.5">
               Название *
             </label>
             <input
               type="text"
               value={categoryForm.name}
               onChange={e => handleNameChange(e.target.value)}
-              className="w-full px-4 py-3 border border-[#E8D4BA]/50 rounded-xl focus:ring-2 focus:ring-[#B08968]/30 focus:border-[#B08968] outline-none"
+              className="w-full px-4 py-3 border border-[#E8D4BA]/50 dark:border-[#3D3D3D] dark:bg-[#2A2A2A] dark:text-[#E5E5E5] rounded-xl focus:ring-2 focus:ring-[#B08968]/30 focus:border-[#B08968] outline-none"
               placeholder="Название категории"
               required
             />
@@ -125,16 +125,16 @@ export function CategoryFormModal({
 
           {/* Slug */}
           <div>
-            <label className="block text-sm font-medium text-[#5D4E3A] mb-1.5">
+            <label className="block text-sm font-medium text-[#5D4E3A] dark:text-[#E5E5E5] mb-1.5">
               URL-адрес (slug)
             </label>
             <div className="flex items-center">
-              <span className="text-[#8B8279] mr-1">/</span>
+              <span className="text-[#8B8279] dark:text-[#707070] mr-1">/</span>
               <input
                 type="text"
                 value={categoryForm.slug}
                 onChange={e => onFormChange({...categoryForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})}
-                className="flex-1 px-3 py-3 border border-[#E8D4BA]/50 rounded-xl focus:ring-2 focus:ring-[#B08968]/30 focus:border-[#B08968] outline-none font-mono text-sm"
+                className="flex-1 px-3 py-3 border border-[#E8D4BA]/50 dark:border-[#3D3D3D] dark:bg-[#2A2A2A] dark:text-[#E5E5E5] rounded-xl focus:ring-2 focus:ring-[#B08968]/30 focus:border-[#B08968] outline-none font-mono text-sm"
                 placeholder="url-kategorii"
               />
             </div>
@@ -142,13 +142,13 @@ export function CategoryFormModal({
 
           {/* Описание */}
           <div>
-            <label className="block text-sm font-medium text-[#5D4E3A] mb-1.5">
+            <label className="block text-sm font-medium text-[#5D4E3A] dark:text-[#E5E5E5] mb-1.5">
               Описание (опционально)
             </label>
             <textarea
               value={categoryForm.description}
               onChange={e => onFormChange({...categoryForm, description: e.target.value})}
-              className="w-full px-4 py-3 border border-[#E8D4BA]/50 rounded-xl focus:ring-2 focus:ring-[#B08968]/30 focus:border-[#B08968] outline-none resize-none"
+              className="w-full px-4 py-3 border border-[#E8D4BA]/50 dark:border-[#3D3D3D] dark:bg-[#2A2A2A] dark:text-[#E5E5E5] rounded-xl focus:ring-2 focus:ring-[#B08968]/30 focus:border-[#B08968] outline-none resize-none"
               rows={2}
               placeholder="Краткое описание категории..."
             />
@@ -156,7 +156,7 @@ export function CategoryFormModal({
         </form>
         
         {/* Кнопки */}
-        <div className="flex gap-3 p-4 sm:p-6 border-t border-[#E8D4BA]/30 bg-white shrink-0" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+        <div className="flex gap-3 p-4 sm:p-6 border-t border-[#E8D4BA]/30 dark:border-[#3D3D3D] bg-white dark:bg-[#1E1E1E] shrink-0" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
           <button
             type="button"
             onClick={onClose}

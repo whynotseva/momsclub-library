@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { getLinkType } from '@/lib/utils'
-import { Star, Eye, FolderOpen, AlertTriangle, Image } from 'lucide-react'
+import { Star, Eye, FolderOpen, AlertTriangle, Image, Camera } from 'lucide-react'
 
 // Динамический импорт редактора
 const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), { 
@@ -55,7 +55,7 @@ function CoverUpload({ formData, formErrors, isDragging, uploadingCover, onUpdat
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-[#5D4E3A] mb-1.5">Обложка *</label>
+      <label className="block text-sm font-medium text-[#5D4E3A] dark:text-[#E5E5E5] mb-1.5">Обложка *</label>
       
       {formData.cover_image ? (
         <div className="relative mb-3 rounded-xl overflow-hidden bg-[#F5E6D3]">
@@ -100,11 +100,11 @@ function CoverUpload({ formData, formErrors, isDragging, uploadingCover, onUpdat
             </div>
           ) : (
             <>
-              <div className="w-14 h-14 bg-[#F5E6D3] rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">📷</span>
+              <div className="w-14 h-14 bg-[#F5E6D3] dark:bg-[#2A2A2A] rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <Camera className="w-7 h-7 text-[#B08968]" />
               </div>
-              <p className="text-sm font-medium text-[#5D4E3A]">Перетащите изображение сюда</p>
-              <p className="text-xs text-[#8B8279] mt-1">или нажмите для выбора • JPG, PNG, WebP • до 5 МБ</p>
+              <p className="text-sm font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">Перетащите изображение сюда</p>
+              <p className="text-xs text-[#8B8279] dark:text-[#707070] mt-1">или нажмите для выбора • JPG, PNG, WebP • до 5 МБ</p>
               <p className="text-xs text-[#B08968] mt-2 font-medium">Рекомендуемый размер: 1200 × 675 px (16:9)</p>
             </>
           )}
@@ -115,12 +115,12 @@ function CoverUpload({ formData, formErrors, isDragging, uploadingCover, onUpdat
       {formErrors.cover_image && <p className="text-red-500 text-xs mt-2">{formErrors.cover_image}</p>}
 
       <div className="mt-3">
-        <label className="block text-xs text-[#8B8279] mb-1">Или вставьте URL изображения:</label>
+        <label className="block text-xs text-[#8B8279] dark:text-[#707070] mb-1">Или вставьте URL изображения:</label>
         <input
           type="url"
           value={formData.cover_image.startsWith('data:') ? '' : formData.cover_image}
           onChange={e => onUpdateFormData({ cover_image: e.target.value })}
-          className="w-full px-3 py-2 border border-[#E8D4BA]/50 rounded-lg text-sm focus:ring-2 focus:ring-[#B08968]/30 focus:border-[#B08968] outline-none"
+          className="w-full px-3 py-2 border border-[#E8D4BA]/50 dark:border-[#3D3D3D] dark:bg-[#2A2A2A] dark:text-[#E5E5E5] rounded-lg text-sm focus:ring-2 focus:ring-[#B08968]/30 focus:border-[#B08968] outline-none"
           placeholder="https://example.com/image.jpg"
         />
       </div>
@@ -159,7 +159,7 @@ function FormContent(props: FormContentProps) {
     <>
       {/* Название */}
       <div>
-        <label className="block text-sm font-medium text-[#5D4E3A] mb-1.5">Название *</label>
+        <label className="block text-sm font-medium text-[#5D4E3A] dark:text-[#E5E5E5] mb-1.5">Название *</label>
         <input
           type="text"
           value={formData.title}
@@ -174,7 +174,7 @@ function FormContent(props: FormContentProps) {
 
       {/* Описание */}
       <div>
-        <label className="block text-sm font-medium text-[#5D4E3A] mb-1.5">Краткое описание</label>
+        <label className="block text-sm font-medium text-[#5D4E3A] dark:text-[#E5E5E5] mb-1.5">Краткое описание</label>
         <textarea
           value={formData.description}
           onChange={e => onUpdateFormData({ description: e.target.value })}

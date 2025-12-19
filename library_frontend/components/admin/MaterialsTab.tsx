@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, BookOpen, Upload, Check, Pencil, Trash2, Eye } from 'lucide-react'
+import { Search, BookOpen, Upload, Check, Pencil, Trash2, Eye, Plus } from 'lucide-react'
 
 interface Category {
   id: number
@@ -105,7 +105,7 @@ export function MaterialsTab({
             onClick={onOpenForm}
             className="px-3 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#C9A882] to-[#B08968] text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-medium hover:shadow-lg transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
           >
-            <span>➕</span> <span className="hidden sm:inline">Новый</span>
+            <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Новый</span>
           </button>
         </div>
       </div>
@@ -186,13 +186,13 @@ export function MaterialsTab({
                       onClick={() => onEdit(material)}
                       className="px-3 py-1.5 text-xs text-[#B08968] bg-[#F5E6D3]/50 dark:bg-[#2A2A2A] rounded-lg"
                     >
-                      ✏️
+                      <Pencil className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => onDelete(material.id)}
                       className="px-3 py-1.5 text-xs text-red-500 bg-red-50 dark:bg-red-900/30 dark:text-red-400 rounded-lg"
                     >
-                      🗑️
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
