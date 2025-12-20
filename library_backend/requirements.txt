@@ -19,6 +19,9 @@ python-dotenv==1.0.0
 # CORS
 fastapi-cors==0.0.6
 
+# Push notifications
+pywebpush==2.1.2
+
 # Валидация
 pydantic==2.5.0
 pydantic-settings==2.1.0

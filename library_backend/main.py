@@ -3,13 +3,71 @@ LibriMomsClub Backend API
 Точка входа приложения
 """
 
-from fastapi import FastAPI
+import logging
+import time
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
+
+# Настраиваем файловое логирование
+LOG_DIR = Path(__file__).resolve().parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+LOG_FILE = LOG_DIR / "library_backend.log"
+ERROR_LOG_FILE = LOG_DIR / "library_backend.error.log"
+
+file_handler = RotatingFileHandler(
+    LOG_FILE,
+    maxBytes=5 * 1024 * 1024,  # 5 MB
+    backupCount=5,
+    encoding="utf-8",
+)
+formatter = logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(name)s:%(lineno)d - %(message)s"
+)
+file_handler.setFormatter(formatter)
+
+error_file_handler = RotatingFileHandler(
+    ERROR_LOG_FILE,
+    maxBytes=2 * 1024 * 1024,  # 2 MB
+    backupCount=5,
+    encoding="utf-8",
+)
+error_file_handler.setLevel(logging.ERROR)
+error_file_handler.setFormatter(formatter)
+
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.addHandler(file_handler)
+root_logger.addHandler(error_file_handler)
+
+logger = logging.getLogger("library_backend")
+
+# Пробрасываем логи uvicorn в файл
+for uvicorn_logger_name in ("uvicorn", "uvicorn.access", "uvicorn.error"):
+    logging.getLogger(uvicorn_logger_name).addHandler(file_handler)
+
+# Инициализация Sentry
+sentry_sdk.init(
+    dsn="https://fa8290f19ef8aa26e5e76f93ac64cb71@o4510567686733824.ingest.us.sentry.io/4510567757643776",
+    integrations=[
+        FastApiIntegration(),
+        StarletteIntegration(),
+    ],
+    traces_sample_rate=0.1,
+    send_default_pii=False,
+    environment="production",
+)
 from app.database import init_db
-from app.api import auth, materials, categories, favorites, admin, websocket, activity
+from app.api import auth, materials, categories, favorites, admin, websocket, activity, push
 
 
 # Создаём приложение FastAPI
@@ -39,6 +97,7 @@ app.include_router(categories.router, prefix=settings.API_V1_PREFIX)
 app.include_router(favorites.router, prefix=settings.API_V1_PREFIX)
 app.include_router(admin.router, prefix=settings.API_V1_PREFIX)
 app.include_router(activity.router, prefix=settings.API_V1_PREFIX)
+app.include_router(push.router, prefix=settings.API_V1_PREFIX)
 app.include_router(websocket.router)  # WebSocket без префикса
 
 
@@ -48,6 +107,7 @@ async def startup_event():
     print("🚀 Запуск LibriMomsClub API...")
     print(f"📊 База данных: {settings.DATABASE_URL}")
     print(f"🔐 DEBUG режим: {settings.DEBUG}")
+    logger.info("API startup: db=%s debug=%s", settings.DATABASE_URL, settings.DEBUG)
     
     # Инициализация БД (создание таблиц, если их нет)
     # init_db()  # Закомментировано, т.к. таблицы уже созданы через миграцию
@@ -83,10 +143,32 @@ async def not_found_handler(request, exc):
 @app.exception_handler(500)
 async def server_error_handler(request, exc):
     """Обработчик 500 ошибок"""
+    logger.exception("Internal server error: %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=500,
         content={"detail": "Внутренняя ошибка сервера"}
     )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Логируем каждый HTTP запрос"""
+    start_time = time.time()
+    try:
+        response = await call_next(request)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
+        raise exc
+
+    process_time = (time.time() - start_time) * 1000
+    logger.info(
+        "HTTP %s %s -> %s (%.2f ms)",
+        request.method,
+        request.url.path,
+        response.status_code,
+        process_time,
+    )
+    return response
 
 
 if __name__ == "__main__":
