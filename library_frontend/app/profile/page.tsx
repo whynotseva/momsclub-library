@@ -6,11 +6,13 @@ import { LoyaltyCard, ReferralCard, PaymentHistoryCard, SettingsCard, PaymentMod
 import { useState, useEffect } from 'react'
 import { api } from '@/lib/api'
 import Link from 'next/link'
+import { useTheme } from '@/contexts/ThemeContext'
 
 export default function ProfilePage() {
   const { user, loading, hasSubscription } = useAuthContext()
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [discountPercent, setDiscountPercent] = useState(0)
+  const { resolvedTheme } = useTheme()
 
   useEffect(() => {
     const loadDiscount = async () => {
@@ -26,25 +28,25 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] dark:from-[#121212] dark:via-[#1A1A1A] dark:to-[#121212] flex items-center justify-center">
         <LoadingSpinner />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] dark:from-[#121212] dark:via-[#1A1A1A] dark:to-[#121212] relative overflow-hidden">
       {/* Premium gradient orbs */}
-      <div className="fixed -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-[#E8D5C4]/30 via-[#D4C4B0]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-tr from-[#C9B89A]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-[#E8D5C4]/30 via-[#D4C4B0]/15 to-transparent dark:from-[#2A2A2A]/20 dark:via-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-tr from-[#C9B89A]/15 to-transparent dark:from-[#2A2A2A]/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#E8D4BA]/30" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#1E1E1E]/80 backdrop-blur-xl border-b border-[#E8D4BA]/30 dark:border-[#3D3D3D]" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           {/* Logo with Santa */}
           <Link href={hasSubscription ? "/" : "/profile"} prefetch={false} className="group relative">
             <img 
-              src="/logolibrary.svg" 
+              src={resolvedTheme === 'dark' ? '/logonighthem.svg' : '/logolibrary.svg'}
               alt="LibriMomsClub" 
               className="h-10 w-auto group-hover:scale-105 transition-transform"
             />
@@ -54,7 +56,7 @@ export default function ProfilePage() {
 {/* Десктоп: кнопка в библиотеку */}
           <Link 
             href="/library" 
-            className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#F5E6D3]/50 hover:bg-[#F5E6D3] text-[#5D4E3A] rounded-xl transition-colors text-sm font-medium"
+            className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#F5E6D3]/50 dark:bg-[#2A2A2A] hover:bg-[#F5E6D3] dark:hover:bg-[#3D3D3D] text-[#5D4E3A] dark:text-[#E5E5E5] rounded-xl transition-colors text-sm font-medium"
           >
             <span>📚</span>
             <span>В библиотеку</span>
@@ -67,7 +69,7 @@ export default function ProfilePage() {
         {/* Hero с профилем */}
         <div className="relative mb-8">
           <div className="absolute inset-0 bg-gradient-to-br from-[#B08968]/10 to-[#C9A882]/5 rounded-3xl blur-xl" />
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl shadow-[#C9A882]/10 border border-[#E8D4BA]/40 p-8">
+          <div className="relative bg-white/90 dark:bg-[#1E1E1E]/90 backdrop-blur-sm rounded-3xl shadow-xl shadow-[#C9A882]/10 dark:shadow-none border border-[#E8D4BA]/40 dark:border-[#3D3D3D] p-8">
             <div className="flex flex-col md:flex-row items-center gap-6">
               {/* Avatar */}
               <div className="relative">
@@ -86,11 +88,11 @@ export default function ProfilePage() {
               
               {/* Info */}
               <div className="text-center md:text-left flex-1">
-                <h1 className="text-2xl font-bold text-[#2D2A26] mb-1">
+                <h1 className="text-2xl font-bold text-[#2D2A26] dark:text-[#E5E5E5] mb-1">
                   Привет, {user?.name}! 👋
                 </h1>
                 {user?.username && (
-                  <p className="text-[#8B8279] mb-3">@{user.username}</p>
+                  <p className="text-[#8B8279] dark:text-[#707070] mb-3">@{user.username}</p>
                 )}
                 
                 {/* Статус подписки */}
@@ -121,17 +123,17 @@ export default function ProfilePage() {
         {/* Cards Grid */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Подписка */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg shadow-[#C9A882]/10 border border-[#E8D4BA]/40 p-6 hover:shadow-xl transition-shadow">
+          <div className="bg-white/90 dark:bg-[#1E1E1E]/90 backdrop-blur-sm rounded-2xl shadow-lg shadow-[#C9A882]/10 dark:shadow-none border border-[#E8D4BA]/40 dark:border-[#3D3D3D] p-6 hover:shadow-xl dark:hover:shadow-lg dark:hover:shadow-black/20 transition-shadow">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-[#B08968] to-[#C9A882] rounded-xl flex items-center justify-center">
                 <span className="text-white text-lg">💳</span>
               </div>
-              <h2 className="text-lg font-semibold text-[#2D2A26]">Подписка</h2>
+              <h2 className="text-lg font-semibold text-[#2D2A26] dark:text-[#E5E5E5]">Подписка</h2>
             </div>
             
             {hasSubscription ? (
               <div className="space-y-4">
-                <p className="text-sm text-[#5D4E3A]">
+                <p className="text-sm text-[#5D4E3A] dark:text-[#B0B0B0]">
                   Вы можете продлить подписку заранее — дни добавятся к текущему сроку.
                 </p>
                 <button 
@@ -143,7 +145,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-sm text-[#5D4E3A]">
+                <p className="text-sm text-[#5D4E3A] dark:text-[#B0B0B0]">
                   Для доступа к библиотеке материалов оформите подписку MomsClub.
                 </p>
                 <button 
@@ -152,7 +154,7 @@ export default function ProfilePage() {
                 >
                   Оформить подписку
                 </button>
-                <p className="text-xs text-center text-[#8B8279]">
+                <p className="text-xs text-center text-[#8B8279] dark:text-[#707070]">
                   или{' '}
                   <a 
                     href="https://t.me/momsclubsubscribe_bot"
@@ -171,26 +173,26 @@ export default function ProfilePage() {
           {hasSubscription ? (
             <LoyaltyCard />
           ) : (
-            <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg shadow-[#C9A882]/10 border border-[#E8D4BA]/40 p-6 relative overflow-hidden">
+            <div className="bg-white/60 dark:bg-[#1E1E1E]/60 backdrop-blur-sm rounded-2xl shadow-lg shadow-[#C9A882]/10 dark:shadow-none border border-[#E8D4BA]/40 dark:border-[#3D3D3D] p-6 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5" />
               <div className="relative">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
                     <span className="text-white text-lg">✨</span>
                   </div>
-                  <h2 className="text-lg font-semibold text-[#2D2A26]">Преимущества подписки</h2>
+                  <h2 className="text-lg font-semibold text-[#2D2A26] dark:text-[#E5E5E5]">Преимущества подписки</h2>
                 </div>
                 
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 text-sm text-[#5D4E3A]">
+                  <div className="flex items-center gap-3 text-sm text-[#5D4E3A] dark:text-[#B0B0B0]">
                     <span className="text-lg">💎</span>
                     <span>Программа лояльности</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-[#5D4E3A]">
+                  <div className="flex items-center gap-3 text-sm text-[#5D4E3A] dark:text-[#B0B0B0]">
                     <span className="text-lg">👥</span>
                     <span>Реферальная программа</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-[#5D4E3A]">
+                  <div className="flex items-center gap-3 text-sm text-[#5D4E3A] dark:text-[#B0B0B0]">
                     <span className="text-lg">📚</span>
                     <span>100+ материалов</span>
                   </div>
@@ -217,7 +219,7 @@ export default function ProfilePage() {
 
         {/* Support */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-[#8B8279]">
+          <p className="text-sm text-[#8B8279] dark:text-[#707070]">
             Нужна помощь?{' '}
             <a 
               href="https://t.me/momsclubsupport"

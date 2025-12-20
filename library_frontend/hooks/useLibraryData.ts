@@ -29,6 +29,8 @@ export function useLibraryData() {
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set())
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [recommendations, setRecommendations] = useState<{type: string, title: string, materials: Material[]}>({type: '', title: '', materials: []})
+  const [searchResults, setSearchResults] = useState<Material[] | null>(null)
+  const [searching, setSearching] = useState(false)
 
   // Основной эффект загрузки данных
   useEffect(() => {
@@ -276,14 +278,42 @@ export function useLibraryData() {
     }
   }, [page, hasMore, materials.length])
 
+  // Серверный поиск материалов
+  const searchMaterials = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults(null)
+      return
+    }
+    
+    setSearching(true)
+    try {
+      const response = await api.get('/materials', { 
+        params: { search: query, page: 1, page_size: 100 } 
+      })
+      setSearchResults(response.data.items || [])
+    } catch (error) {
+      console.error('Error searching materials:', error)
+      setSearchResults([])
+    } finally {
+      setSearching(false)
+    }
+  }, [])
+
+  // Сброс поиска
+  const clearSearch = useCallback(() => {
+    setSearchResults(null)
+  }, [])
+
   return {
     // Состояния
     loading,
     loadingMore,
+    searching,
     hasSubscription,
     user,
     isAdmin,
     materials,
+    searchResults,
     apiCategories,
     favoriteIds,
     notifications,
@@ -300,5 +330,7 @@ export function useLibraryData() {
     openMaterial,
     toggleFavorite,
     loadMoreMaterials,
+    searchMaterials,
+    clearSearch,
   }
 }

@@ -52,7 +52,7 @@ export const MaterialCard = memo(function MaterialCard({
 
   return (
     <div
-      className="group bg-white/90 rounded-2xl shadow-lg shadow-[#C9A882]/10 hover:shadow-xl hover:shadow-[#C9A882]/20 transition-all duration-500 p-5 cursor-pointer border border-[#E8D4BA]/40 hover:-translate-y-1 relative overflow-hidden animate-fadeIn"
+      className="group bg-white/90 dark:bg-[#1E1E1E]/90 rounded-2xl shadow-lg shadow-[#C9A882]/10 dark:shadow-none hover:shadow-xl hover:shadow-[#C9A882]/20 dark:hover:shadow-lg dark:hover:shadow-black/20 transition-all duration-500 p-5 cursor-pointer border border-[#E8D4BA]/40 dark:border-[#3D3D3D] hover:-translate-y-1 relative overflow-hidden animate-fadeIn"
       style={{ animationDelay: `${animationDelay}ms` }}
     >
       {/* Бейджи */}
@@ -74,7 +74,7 @@ export const MaterialCard = memo(function MaterialCard({
         className={`absolute bottom-2 right-2 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-md ${
           isFavorite
             ? 'bg-red-500 text-white'
-            : 'bg-white/90 text-gray-400 hover:bg-red-100 hover:text-red-500'
+            : 'bg-white/90 dark:bg-[#2A2A2A] text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-500'
         }`}
       >
         <span className="text-base">{isFavorite ? '❤️' : '🤍'}</span>
@@ -94,19 +94,19 @@ export const MaterialCard = memo(function MaterialCard({
           </div>
         )}
 
-        <span className="text-xs bg-[#F5E6D3] text-[#8B7355] px-2 py-1 rounded-full font-medium inline-block max-w-full truncate" title={categoryName}>
+        <span className="text-xs bg-[#F5E6D3] dark:bg-[#2A2A2A] text-[#8B7355] dark:text-[#B0B0B0] px-2 py-1 rounded-full font-medium inline-block max-w-full truncate" title={categoryName}>
           {categoryName}
         </span>
 
-        <h4 className="font-semibold text-[#2D2A26] mt-2 text-sm leading-tight line-clamp-2">
+        <h4 className="font-semibold text-[#2D2A26] dark:text-[#E5E5E5] mt-2 text-sm leading-tight line-clamp-2">
           {material.title}
         </h4>
 
         {material.description && (
-          <p className="text-xs text-[#8B8279] mt-1 line-clamp-2">{material.description}</p>
+          <p className="text-xs text-[#8B8279] dark:text-[#707070] mt-1 line-clamp-2">{material.description}</p>
         )}
 
-        <div className="text-xs text-[#8B8279] mt-2 flex items-center gap-3">
+        <div className="text-xs text-[#8B8279] dark:text-[#707070] mt-2 flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span>👁️</span>
             <span>{material.views}</span>

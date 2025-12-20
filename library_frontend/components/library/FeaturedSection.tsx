@@ -1,5 +1,7 @@
 'use client'
 
+import { useTheme } from '@/contexts/ThemeContext'
+
 interface MaterialItem {
   id: number
   title: string
@@ -34,14 +36,21 @@ export function FeaturedSection({
   borderColor,
   onMaterialClick,
 }: FeaturedSectionProps) {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+  
+  // В тёмной теме используем тёмные цвета вместо светлых градиентов
+  const darkGradient = 'from-[#2A2A2A] to-[#1E1E1E]'
+  const darkBorder = 'border-[#3D3D3D]'
+  
   if (materials.length === 0) return null
 
   return (
     <div className="mb-6">
-      <h3 className="text-lg font-bold text-[#2D2A26] flex items-center gap-2 mb-3">
+      <h3 className="text-lg font-bold text-[#2D2A26] dark:text-[#E5E5E5] flex items-center gap-2 mb-3">
         <span>{icon}</span> {title}
         {badge && (
-          <span className="text-xs font-normal text-[#B08968] bg-[#F5E6D3] px-2 py-0.5 rounded-full">{badge}</span>
+          <span className="text-xs font-normal text-[#B08968] bg-[#F5E6D3] dark:bg-[#2A2A2A] px-2 py-0.5 rounded-full">{badge}</span>
         )}
       </h3>
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
@@ -49,16 +58,16 @@ export function FeaturedSection({
           <div 
             key={material.id}
             onClick={() => onMaterialClick(material)}
-            className={`flex-shrink-0 w-40 bg-gradient-to-br ${gradientFrom} ${gradientTo} rounded-xl p-3 border ${borderColor} hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer`}
+            className={`flex-shrink-0 w-40 bg-gradient-to-br ${isDark ? darkGradient : `${gradientFrom} ${gradientTo}`} rounded-xl p-3 border ${isDark ? darkBorder : borderColor} hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer`}
           >
             {(material.cover_url || material.cover_image) ? (
               <img src={material.cover_url || material.cover_image} alt={material.title} className="w-full h-20 object-cover rounded-lg mb-2" />
             ) : (
-              <div className={`w-full h-20 bg-gradient-to-br ${gradientFrom.replace('50', '200')} ${gradientTo.replace('50', '300')} rounded-lg mb-2 flex items-center justify-center text-2xl`}>
+              <div className={`w-full h-20 bg-gradient-to-br ${isDark ? 'from-[#3D3D3D] to-[#2A2A2A]' : `${gradientFrom.replace('50', '200')} ${gradientTo.replace('50', '300')}`} rounded-lg mb-2 flex items-center justify-center text-2xl`}>
                 {material.categories?.[0]?.icon || material.category?.icon || icon}
               </div>
             )}
-            <h4 className="font-medium text-[#2D2A26] text-xs line-clamp-2 leading-tight">{material.title}</h4>
+            <h4 className="font-medium text-[#2D2A26] dark:text-[#E5E5E5] text-xs line-clamp-2 leading-tight">{material.title}</h4>
           </div>
         ))}
       </div>

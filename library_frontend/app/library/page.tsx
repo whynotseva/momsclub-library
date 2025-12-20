@@ -14,9 +14,11 @@ export default function LibraryPage() {
   const {
     loading,
     loadingMore,
+    searching,
     user,
     isAdmin,
     materials,
+    searchResults,
     apiCategories,
     favoriteIds,
     notifications,
@@ -29,6 +31,8 @@ export default function LibraryPage() {
     hasSubscription,
     hasMore,
     loadMoreMaterials,
+    searchMaterials,
+    clearSearch,
   } = useLibraryData()
   
   // WebSocket для отслеживания онлайн — включается только при активной подписке
@@ -54,34 +58,42 @@ export default function LibraryPage() {
   // Поиск
   const [searchQuery, setSearchQuery] = useState('')
   
+  // Debounced серверный поиск
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        searchMaterials(searchQuery)
+      } else {
+        clearSearch()
+      }
+    }, 300) // 300ms debounce
+    
+    return () => clearTimeout(timer)
+  }, [searchQuery, searchMaterials, clearSearch])
+  
   // Мемоизированные фильтры
   const featuredMaterials = useMemo(() => 
     materials.filter(m => m.is_featured), 
     [materials]
   )
   
-  const filteredMaterials = useMemo(() => 
-    materials
-      .filter(m => {
-        if (activeCategory === 'all') return true
-        if (activeCategory === 'featured') return m.is_featured
-        if (m.categories?.length) {
-          return m.categories.some(c => c.slug === activeCategory)
-        }
-        return m.category?.slug === activeCategory
-      })
-      .filter(m => {
-        if (!searchQuery.trim()) return true
-        const query = searchQuery.toLowerCase()
-        const categoryNames = m.categories?.map(c => c.name.toLowerCase()).join(' ') || m.category?.name.toLowerCase() || ''
-        return (
-          m.title.toLowerCase().includes(query) ||
-          m.description?.toLowerCase().includes(query) ||
-          categoryNames.includes(query)
-        )
-      }),
-    [materials, activeCategory, searchQuery]
-  )
+  // Если есть поиск - используем результаты с сервера, иначе - локальные материалы
+  const filteredMaterials = useMemo(() => {
+    // Если есть поисковый запрос и результаты с сервера
+    if (searchQuery.trim() && searchResults !== null) {
+      return searchResults
+    }
+    
+    // Иначе фильтруем локально по категории
+    return materials.filter(m => {
+      if (activeCategory === 'all') return true
+      if (activeCategory === 'featured') return m.is_featured
+      if (m.categories?.length) {
+        return m.categories.some(c => c.slug === activeCategory)
+      }
+      return m.category?.slug === activeCategory
+    })
+  }, [materials, activeCategory, searchQuery, searchResults])
   
   // Пагинация материалов (4 на мобилке, 8 на десктопе)
   const [visibleCount, setVisibleCount] = useState(4) // Начинаем с 4 (мобилка)
@@ -130,10 +142,10 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] relative">
+    <div className="min-h-screen bg-gradient-to-b from-[#FDFCFA] via-[#FBF8F3] to-[#F5EFE6] dark:from-[#121212] dark:via-[#1A1A1A] dark:to-[#121212] relative">
       {/* Premium gradient orbs */}
-      <div className="fixed -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-[#E8D5C4]/30 via-[#D4C4B0]/15 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      <div className="fixed -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-tr from-[#C9B89A]/15 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+      <div className="fixed -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-[#E8D5C4]/30 via-[#D4C4B0]/15 to-transparent rounded-full blur-3xl pointer-events-none dark:from-[#2A2A2A]/20 dark:via-transparent"></div>
+      <div className="fixed -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-tr from-[#C9B89A]/15 to-transparent rounded-full blur-3xl pointer-events-none dark:from-[#2A2A2A]/10"></div>
 
       {/* Header */}
       <Header
@@ -217,8 +229,8 @@ export default function LibraryPage() {
         
         {/* Результаты поиска */}
         {searchQuery && (
-          <p className="text-sm text-[#8B8279] mb-4 -mt-2">
-            🔍 Найдено: {filteredMaterials.length} материалов
+          <p className="text-sm text-[#8B8279] dark:text-[#707070] mb-4 -mt-2">
+            {searching ? '⏳ Поиск...' : `🔍 Найдено: ${filteredMaterials.length} материалов`}
           </p>
         )}
 
@@ -226,19 +238,19 @@ export default function LibraryPage() {
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <h3 className="text-2xl font-bold text-[#2D2A26]">
+              <h3 className="text-2xl font-bold text-[#2D2A26] dark:text-[#E5E5E5]">
                 {searchQuery ? '🔍 Результаты поиска' : '📚 Материалы'}
               </h3>
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">
-                {filteredMaterials.length} шт.
+              <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full font-semibold">
+                {searchQuery || activeCategory !== 'all' ? filteredMaterials.length : user.totalMaterials} шт.
               </span>
             </div>
           </div>
           
           {filteredMaterials.length === 0 ? (
-            <div className="text-center py-12 bg-white/80 rounded-2xl border border-[#E8D4BA]/40">
+            <div className="text-center py-12 bg-white/80 dark:bg-[#1E1E1E]/80 rounded-2xl border border-[#E8D4BA]/40 dark:border-[#3D3D3D]">
               <div className="text-4xl mb-4">{searchQuery ? '🔍' : '📭'}</div>
-              <p className="text-[#8B8279] mb-2">
+              <p className="text-[#8B8279] dark:text-[#707070] mb-2">
                 {searchQuery ? `Ничего не найдено по запросу "${searchQuery}"` : 'Пока нет материалов'}
               </p>
               {searchQuery && (
@@ -280,7 +292,7 @@ export default function LibraryPage() {
                   {visibleCount > ITEMS_PER_PAGE && (
                     <button
                       onClick={() => setVisibleCount(ITEMS_PER_PAGE)}
-                      className="px-6 py-3 bg-white/90 text-[#5C5650] font-medium rounded-xl border border-[#E8D4BA]/40 hover:bg-[#F5E6D3] hover:-translate-y-0.5 transition-all duration-300"
+                      className="px-6 py-3 bg-white/90 dark:bg-[#1E1E1E]/90 text-[#5C5650] dark:text-[#B0B0B0] font-medium rounded-xl border border-[#E8D4BA]/40 dark:border-[#3D3D3D] hover:bg-[#F5E6D3] dark:hover:bg-[#2A2A2A] hover:-translate-y-0.5 transition-all duration-300"
                     >
                       Скрыть
                     </button>
@@ -317,22 +329,22 @@ export default function LibraryPage() {
         {/* Категории из API */}
         {apiCategories.length > 0 && (
           <section className="mb-12">
-            <h3 className="text-2xl font-bold text-[#2D2A26] mb-6">📂 Категории</h3>
+            <h3 className="text-2xl font-bold text-[#2D2A26] dark:text-[#E5E5E5] mb-6">📂 Категории</h3>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {apiCategories.map((cat) => (
                 <button 
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.slug)}
-                  className={`group bg-white/90 rounded-2xl p-6 text-center shadow-lg shadow-[#C9A882]/10 hover:shadow-xl hover:shadow-[#C9A882]/20 transition-all duration-300 cursor-pointer border hover:-translate-y-1 ${
+                  className={`group bg-white/90 dark:bg-[#1E1E1E]/90 rounded-2xl p-6 text-center shadow-lg shadow-[#C9A882]/10 dark:shadow-none hover:shadow-xl hover:shadow-[#C9A882]/20 dark:hover:shadow-lg dark:hover:shadow-black/20 transition-all duration-300 cursor-pointer border hover:-translate-y-1 ${
                     activeCategory === cat.slug 
-                      ? 'border-[#B08968] bg-[#F5E6D3]/50' 
-                      : 'border-[#E8D4BA]/40'
+                      ? 'border-[#B08968] bg-[#F5E6D3]/50 dark:bg-[#2A2A2A]/50' 
+                      : 'border-[#E8D4BA]/40 dark:border-[#3D3D3D]'
                   }`}
                 >
                   <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">{cat.icon}</div>
-                  <div className="font-semibold text-[#2D2A26]">{cat.name}</div>
-                  <div className="text-sm text-[#8B8279] mt-2">
+                  <div className="font-semibold text-[#2D2A26] dark:text-[#E5E5E5]">{cat.name}</div>
+                  <div className="text-sm text-[#8B8279] dark:text-[#707070] mt-2">
                     {cat.materials_count || 0} материалов
                   </div>
                 </button>

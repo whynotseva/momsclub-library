@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-[#FDFCFA] text-gray-900;
+    @apply bg-[#FDFCFA] dark:bg-[#121212] text-gray-900 dark:text-[#E5E5E5];
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
@@ -228,4 +228,46 @@
 /* Цвет overscroll для iOS */
 html, body {
   background-color: #FDFCFA !important;
+}
+
+.dark html, .dark body {
+  background-color: #121212 !important;
+}
+
+/* Dark mode для ProseMirror редактора */
+.dark .ProseMirror p.is-editor-empty:first-child::before {
+  color: #707070;
+}
+
+.dark .ProseMirror h1,
+.dark .ProseMirror h2,
+.dark .ProseMirror h3 {
+  color: #E5E5E5;
+}
+
+.dark .ProseMirror p {
+  color: #B0B0B0;
+}
+
+.dark .ProseMirror blockquote {
+  border-left-color: #B08968;
+  color: #707070;
+}
+
+.dark .ProseMirror pre,
+.dark .ProseMirror code {
+  background: #2A2A2A;
+  color: #E5E5E5;
+}
+
+.dark .ProseMirror hr {
+  border-top-color: #3D3D3D;
+}
+
+.dark .ProseMirror a {
+  color: #B08968;
+}
+
+.dark .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: #707070;
 }

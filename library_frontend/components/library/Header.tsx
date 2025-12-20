@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Avatar } from '@/components/shared'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface Notification {
   id: number
@@ -55,17 +56,19 @@ export function Header({
   onMarkAllAsRead,
   onLogout,
 }: HeaderProps) {
+  const { resolvedTheme, toggleTheme } = useTheme()
+
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 border-b border-white/50 shadow-lg transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`} 
-      style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(20px) saturate(180%)', paddingTop: 'env(safe-area-inset-top)' }}
+      className={`fixed top-0 left-0 right-0 z-50 border-b border-white/50 dark:border-[#3D3D3D] shadow-lg transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`} 
+      style={{ background: resolvedTheme === 'dark' ? 'rgba(30,30,30,0.85)' : 'rgba(255,255,255,0.55)', backdropFilter: 'blur(20px) saturate(180%)', paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="max-w-7xl mx-auto px-6 py-2">
         <div className="flex items-center justify-between">
           <a href="/library" className="flex items-center space-x-2 group relative">
             <span className="text-2xl absolute -top-1 -left-2 rotate-[-15deg] drop-shadow-md">🎅</span>
             <img 
-              src="/logolibrary.svg" 
+              src={resolvedTheme === 'dark' ? '/logonighthem.svg' : '/logolibrary.svg'}
               alt="LibriMomsClub" 
               className="h-8 w-auto group-hover:scale-105 transition-transform ml-5"
             />
@@ -73,17 +76,34 @@ export function Header({
           
           <nav className="hidden md:flex space-x-8">
             <a href="/library" className="text-[#B08968] font-semibold">Библиотека</a>
-            <a href="/favorites" className="text-[#8B8279] hover:text-[#B08968] transition-colors">Избранное</a>
-            <a href="/history" className="text-[#8B8279] hover:text-[#B08968] transition-colors">История</a>
-            <a href="/profile" className="text-[#8B8279] hover:text-[#B08968] transition-colors">Профиль</a>
+            <a href="/favorites" className="text-[#8B8279] dark:text-[#B0B0B0] hover:text-[#B08968] transition-colors">Избранное</a>
+            <a href="/history" className="text-[#8B8279] dark:text-[#B0B0B0] hover:text-[#B08968] transition-colors">История</a>
+            <a href="/profile" className="text-[#8B8279] dark:text-[#B0B0B0] hover:text-[#B08968] transition-colors">Профиль</a>
           </nav>
           
           <div className="flex items-center space-x-4">
+            {/* Тумблер темы */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl hover:bg-[#F5E6D3]/50 dark:hover:bg-[#2A2A2A] transition-colors"
+              title={resolvedTheme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+            >
+              {resolvedTheme === 'dark' ? (
+                <svg className="w-5 h-5 text-[#B08968]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-[#B08968]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+
             {/* Уведомления */}
             <div className="relative">
               <button 
                 onClick={onToggleNotifications}
-                className="relative p-2 hover:bg-[#F5E6D3]/50 rounded-xl transition-colors"
+                className="relative p-2 hover:bg-[#F5E6D3]/50 dark:hover:bg-[#2A2A2A] rounded-xl transition-colors"
               >
                 <svg className="w-6 h-6 text-[#B08968]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -105,10 +125,10 @@ export function Header({
               
               {/* Dropdown уведомлений */}
               {showNotifications && (
-                <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-2xl border border-[#E8D4BA]/40 z-50 overflow-hidden">
+                <div className="absolute right-0 top-12 w-80 bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl border border-[#E8D4BA]/40 dark:border-[#3D3D3D] z-50 overflow-hidden">
                   {/* Header */}
-                  <div className="px-4 py-3 border-b border-[#E8D4BA]/30 flex items-center justify-between">
-                    <span className="font-bold text-[#2D2A26]">Уведомления</span>
+                  <div className="px-4 py-3 border-b border-[#E8D4BA]/30 dark:border-[#3D3D3D] flex items-center justify-between">
+                    <span className="font-bold text-[#2D2A26] dark:text-[#E5E5E5]">Уведомления</span>
                     <button 
                       onClick={onMarkAllAsRead}
                       className="text-xs text-[#B08968] hover:text-[#8B7355] font-medium"
@@ -120,7 +140,7 @@ export function Header({
                   {/* Notifications list */}
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="px-4 py-8 text-center text-[#8B8279]">
+                      <div className="px-4 py-8 text-center text-[#8B8279] dark:text-[#707070]">
                         <span className="text-3xl mb-2 block">✨</span>
                         Нет новых уведомлений
                       </div>
@@ -129,8 +149,8 @@ export function Header({
                         <div 
                           key={notif.id}
                           onClick={() => onMarkAsRead(notif.id)}
-                          className={`px-4 py-3 border-b border-[#E8D4BA]/20 hover:bg-[#FBF8F3] cursor-pointer transition-colors ${
-                            !notif.is_read ? 'bg-[#F5E6D3]/20' : ''
+                          className={`px-4 py-3 border-b border-[#E8D4BA]/20 dark:border-[#3D3D3D] hover:bg-[#FBF8F3] dark:hover:bg-[#2A2A2A] cursor-pointer transition-colors ${
+                            !notif.is_read ? 'bg-[#F5E6D3]/20 dark:bg-[#2A2A2A]/50' : ''
                           }`}
                         >
                           <div className="flex items-start space-x-3">
@@ -138,9 +158,9 @@ export function Header({
                               !notif.is_read ? 'bg-[#B08968]' : 'bg-gray-300'
                             }`}></div>
                             <div className="flex-1">
-                              <p className="font-semibold text-sm text-[#2D2A26]">{notif.title}</p>
-                              <p className="text-sm text-[#5C5650]">{notif.text}</p>
-                              <p className="text-xs text-[#8B8279] mt-1">
+                              <p className="font-semibold text-sm text-[#2D2A26] dark:text-[#E5E5E5]">{notif.title}</p>
+                              <p className="text-sm text-[#5C5650] dark:text-[#B0B0B0]">{notif.text}</p>
+                              <p className="text-xs text-[#8B8279] dark:text-[#707070] mt-1">
                                 {new Date(notif.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                               </p>
                             </div>
@@ -151,7 +171,7 @@ export function Header({
                   </div>
                   
                   {/* Footer с Push toggle */}
-                  <div className="px-4 py-3 border-t border-[#E8D4BA]/30">
+                  <div className="px-4 py-3 border-t border-[#E8D4BA]/30 dark:border-[#3D3D3D]">
                     {pushSupported && (
                       <button 
                         onClick={onTogglePush}
@@ -159,7 +179,7 @@ export function Header({
                         className={`w-full mb-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                           pushSubscribed 
                             ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                            : 'bg-[#F5E6D3] text-[#8B7355] hover:bg-[#E8D4BA]'
+                            : 'bg-[#F5E6D3] dark:bg-[#2A2A2A] text-[#8B7355] dark:text-[#B0B0B0] hover:bg-[#E8D4BA] dark:hover:bg-[#3D3D3D]'
                         }`}
                       >
                         {pushLoading ? (
@@ -193,29 +213,29 @@ export function Header({
                   name={user.name}
                   size="md"
                 />
-                <span className="text-[#8B8279] text-sm font-medium hidden md:block">
+                <span className="text-[#8B8279] dark:text-[#B0B0B0] text-sm font-medium hidden md:block">
                   Выйти
                 </span>
               </button>
               
               {/* Выпадающее меню профиля */}
               {showProfileMenu && (
-                <div className="absolute right-0 top-12 bg-white rounded-xl shadow-xl border border-[#E8D4BA]/50 py-2 min-w-[160px] z-50">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm font-medium text-[#2D2A26]">{user.name}</p>
-                    <p className="text-xs text-[#8B8279]">@{typeof window !== 'undefined' && localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}').username : ''}</p>
+                <div className="absolute right-0 top-12 bg-white dark:bg-[#1E1E1E] rounded-xl shadow-xl border border-[#E8D4BA]/50 dark:border-[#3D3D3D] py-2 min-w-[160px] z-50">
+                  <div className="px-4 py-2 border-b border-gray-100 dark:border-[#3D3D3D]">
+                    <p className="text-sm font-medium text-[#2D2A26] dark:text-[#E5E5E5]">{user.name}</p>
+                    <p className="text-xs text-[#8B8279] dark:text-[#707070]">@{typeof window !== 'undefined' && localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}').username : ''}</p>
                   </div>
                   {isAdmin && (
                     <Link 
                       href="/admin"
-                      className="w-full px-4 py-2 text-left text-sm text-[#B08968] hover:bg-[#F5E6D3] transition-colors flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-sm text-[#B08968] hover:bg-[#F5E6D3] dark:hover:bg-[#2A2A2A] transition-colors flex items-center gap-2"
                     >
                       <span>⚙️</span> Админ-панель
                     </Link>
                   )}
                   <button 
                     onClick={onLogout}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
