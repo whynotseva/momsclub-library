@@ -8,10 +8,6 @@ import time
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-import sentry_sdk
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.starlette import StarletteIntegration
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -55,19 +51,9 @@ logger = logging.getLogger("library_backend")
 for uvicorn_logger_name in ("uvicorn", "uvicorn.access", "uvicorn.error"):
     logging.getLogger(uvicorn_logger_name).addHandler(file_handler)
 
-# Инициализация Sentry
-sentry_sdk.init(
-    dsn="https://fa8290f19ef8aa26e5e76f93ac64cb71@o4510567686733824.ingest.us.sentry.io/4510567757643776",
-    integrations=[
-        FastApiIntegration(),
-        StarletteIntegration(),
-    ],
-    traces_sample_rate=0.1,
-    send_default_pii=False,
-    environment="production",
-)
 from app.database import init_db
 from app.api import auth, materials, categories, favorites, admin, websocket, activity, push
+
 
 
 # Создаём приложение FastAPI

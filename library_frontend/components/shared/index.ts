@@ -7,3 +7,5 @@ export { EmptyState } from './EmptyState'
 export { Avatar } from './Avatar'
 export { Badge } from './Badge'
 export { SubscriptionGuard } from './SubscriptionGuard'
+export { OfflineIndicator } from './OfflineIndicator'
+

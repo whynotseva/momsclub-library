@@ -3,10 +3,10 @@
 import { ReactNode, useEffect } from 'react'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
-import { SubscriptionGuard } from '@/components/shared'
+import { SubscriptionGuard, OfflineIndicator } from '@/components/shared'
 
 export default function ClientWrapper({ children }: { children: ReactNode }) {
-  // Регистрация Service Worker для Push уведомлений
+  // Регистрация Service Worker для Push уведомлений + Offline
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
@@ -18,6 +18,7 @@ export default function ClientWrapper({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <OfflineIndicator />
         <SubscriptionGuard>
           {children}
         </SubscriptionGuard>
@@ -25,3 +26,4 @@ export default function ClientWrapper({ children }: { children: ReactNode }) {
     </ThemeProvider>
   )
 }
+
