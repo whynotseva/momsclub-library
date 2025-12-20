@@ -19,7 +19,7 @@ def format_subscription_status(subscription) -> str:
         return "♾️ ∞ Пожизненная подписка"
     
     days_left = (subscription.end_date - datetime.now()).days
-    date_formatted = subscription.end_date.strftime('%d.%m.%Y')
+    date_formatted = subscription.end_date.strftime('%d.%m.%Y в %H:%M МСК')
     
     # Визуальные индикаторы по срочности
     if days_left <= 1:
