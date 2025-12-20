@@ -2035,7 +2035,7 @@ async def show_subscription_menu(callback: CallbackQuery, state: FSMContext):
         
         telegram_id = int(callback.data.split(":")[1])
         
-        # Получаем пользователя для проверки автопродления
+        # Получаем пользователя для проверки автопродления и наличия сохранённой карты
         async with AsyncSessionLocal() as session:
             user = await get_user_by_telegram_id(session, telegram_id)
             if not user:
@@ -2043,8 +2043,10 @@ async def show_subscription_menu(callback: CallbackQuery, state: FSMContext):
                 return
             
             is_recurring = getattr(user, "is_recurring_active", False)
+            has_payment_method = bool(getattr(user, "yookassa_payment_method_id", None))
+            subscription = await get_active_subscription(session, user.id)
         
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        keyboard_buttons = [
             [InlineKeyboardButton(
                 text="🔑 Выдать подписку",
                 callback_data=f"admin_grant:{telegram_id}"
@@ -2053,6 +2055,16 @@ async def show_subscription_menu(callback: CallbackQuery, state: FSMContext):
                 text=("🛑 Выключить автопродление" if is_recurring else "🔄 Включить автопродление"),
                 callback_data=(f"admin_disable_autorenew:{telegram_id}" if is_recurring else f"admin_enable_autorenew:{telegram_id}")
             )],
+        ]
+        
+        # Кнопка досрочного списания (только если есть сохранённая карта и активная подписка)
+        if has_payment_method and subscription:
+            keyboard_buttons.append([InlineKeyboardButton(
+                text="⚡ Досрочное списание",
+                callback_data=f"admin_early_charge:{telegram_id}"
+            )])
+        
+        keyboard_buttons.extend([
             [
                 InlineKeyboardButton(
                     text="💳 История платежей",
@@ -2069,6 +2081,8 @@ async def show_subscription_menu(callback: CallbackQuery, state: FSMContext):
             )]
         ])
         
+        keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+        
         text = "💼 <b>Управление подпиской</b>\n\nВыберите действие:"
         
         await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
@@ -2077,6 +2091,232 @@ async def show_subscription_menu(callback: CallbackQuery, state: FSMContext):
     except Exception as e:
         logger.error(f"Ошибка в show_subscription_menu: {e}", exc_info=True)
         await callback.answer("❌ Ошибка при открытии меню", show_alert=True)
+
+
+@users_router.callback_query(F.data.startswith("admin_early_charge:"))
+async def show_early_charge_confirm(callback: CallbackQuery):
+    """Показывает подтверждение досрочного списания"""
+    try:
+        telegram_id = int(callback.data.split(":")[1])
+        
+        async with AsyncSessionLocal() as session:
+            user = await get_user_by_telegram_id(session, telegram_id)
+            if not user:
+                await callback.answer("❌ Пользователь не найден", show_alert=True)
+                return
+            
+            # Проверяем наличие сохранённой карты
+            if not user.yookassa_payment_method_id:
+                await callback.answer("❌ У пользователя нет сохранённой карты", show_alert=True)
+                return
+            
+            # Получаем подписку для определения тарифа
+            subscription = await get_active_subscription(session, user.id)
+            if not subscription:
+                await callback.answer("❌ У пользователя нет активной подписки", show_alert=True)
+                return
+            
+            # Определяем тариф по подписке
+            from utils.constants import SUBSCRIPTION_PRICE, SUBSCRIPTION_PRICE_2MONTHS, SUBSCRIPTION_PRICE_3MONTHS
+            renewal_days = subscription.renewal_duration_days or 30
+            if renewal_days >= 90:
+                renewal_amount = SUBSCRIPTION_PRICE_3MONTHS
+                renewal_days = 90
+            elif renewal_days >= 60:
+                renewal_amount = SUBSCRIPTION_PRICE_2MONTHS
+                renewal_days = 60
+            else:
+                renewal_amount = SUBSCRIPTION_PRICE
+                renewal_days = 30
+            
+            # Проверяем скидку лояльности
+            if subscription.renewal_price:
+                renewal_amount = subscription.renewal_price
+            
+            days_left = (subscription.end_date - datetime.now()).days
+            
+            user_name = user.first_name or "Пользователь"
+            if user.username:
+                user_name += f" (@{user.username})"
+        
+        text = (
+            f"⚡ <b>Досрочное списание</b>\n\n"
+            f"👤 <b>{user_name}</b>\n"
+            f"📅 Текущая подписка до: {subscription.end_date.strftime('%d.%m.%Y')} ({days_left} дн.)\n\n"
+            f"💳 <b>Будет списано:</b> {renewal_amount}₽\n"
+            f"📦 <b>Тариф:</b> {renewal_days} дней\n\n"
+            f"⚠️ После списания подписка будет продлена на {renewal_days} дней от текущей даты окончания.\n\n"
+            f"Подтвердить списание?"
+        )
+        
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Да, списать",
+                    callback_data=f"admin_early_charge_confirm:{telegram_id}:{renewal_amount}:{renewal_days}"
+                ),
+                InlineKeyboardButton(
+                    text="❌ Отмена",
+                    callback_data=f"admin_subscription_menu:{telegram_id}"
+                )
+            ]
+        ])
+        
+        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+        await callback.answer()
+        
+    except Exception as e:
+        logger.error(f"Ошибка в show_early_charge_confirm: {e}", exc_info=True)
+        await callback.answer("❌ Ошибка", show_alert=True)
+
+
+@users_router.callback_query(F.data.startswith("admin_early_charge_confirm:"))
+async def process_early_charge(callback: CallbackQuery):
+    """Выполняет досрочное списание"""
+    try:
+        parts = callback.data.split(":")
+        telegram_id = int(parts[1])
+        amount = int(parts[2])
+        days = int(parts[3])
+        
+        admin_user = await get_admin_user(callback)
+        admin_name = admin_user.first_name if admin_user else "Админ"
+        
+        async with AsyncSessionLocal() as session:
+            user = await get_user_by_telegram_id(session, telegram_id)
+            if not user:
+                await callback.answer("❌ Пользователь не найден", show_alert=True)
+                return
+            
+            if not user.yookassa_payment_method_id:
+                await callback.answer("❌ У пользователя нет сохранённой карты", show_alert=True)
+                return
+            
+            subscription = await get_active_subscription(session, user.id)
+            if not subscription:
+                await callback.answer("❌ У пользователя нет активной подписки", show_alert=True)
+                return
+            
+            user_name = user.first_name or "Пользователь"
+            if user.username:
+                user_name = f"@{user.username}"
+        
+        # Отправляем сообщение о начале процесса
+        await callback.message.edit_text(
+            f"⏳ <b>Инициация досрочного списания...</b>\n\n"
+            f"👤 {user_name}\n"
+            f"💳 Сумма: {amount}₽\n"
+            f"📦 Тариф: {days} дней",
+            parse_mode="HTML"
+        )
+        
+        # Создаём автоплатёж
+        from payment import create_autopayment
+        
+        status, payment_id = create_autopayment(
+            user_id=user.telegram_id,
+            amount=amount,
+            description=f"Досрочное продление подписки Mom's Club на {days} дней ({user_name})",
+            payment_method_id=user.yookassa_payment_method_id,
+            days=days
+        )
+        
+        logger.info(f"[Early Charge] Admin {admin_name} initiated for user {telegram_id}: status={status}, payment_id={payment_id}")
+        
+        # Формируем результат
+        if status == "success":
+            result_text = (
+                f"✅ <b>Досрочное автопродление</b>\n\n"
+                f"👤 Пользователь: {user_name}\n"
+                f"🆔 Telegram ID: {telegram_id}\n"
+                f"💵 Сумма: {amount}₽\n"
+                f"📅 Дней: {days}\n"
+                f"📊 Статус: ✅ SUCCESS\n"
+                f"🆔 Payment ID: <code>{payment_id[:30]}...</code>\n\n"
+                f"🕐 Время: {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}"
+            )
+            # Уведомление пользователю отправится автоматически через webhook
+            
+        elif status == "pending":
+            result_text = (
+                f"⏳ <b>Досрочное автопродление</b>\n\n"
+                f"👤 Пользователь: {user_name}\n"
+                f"🆔 Telegram ID: {telegram_id}\n"
+                f"💵 Сумма: {amount}₽\n"
+                f"📅 Дней: {days}\n"
+                f"📊 Статус: ⏳ PENDING\n"
+                f"🆔 Payment ID: <code>{payment_id[:30]}...</code>\n\n"
+                f"ℹ️ Платёж в обработке, подписка продлится после подтверждения.\n"
+                f"🕐 Время: {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}"
+            )
+        else:
+            result_text = (
+                f"❌ <b>Ошибка досрочного списания</b>\n\n"
+                f"👤 Пользователь: {user_name}\n"
+                f"🆔 Telegram ID: {telegram_id}\n"
+                f"💵 Сумма: {amount}₽\n"
+                f"📊 Статус: ❌ FAILED\n\n"
+                f"Возможные причины:\n"
+                f"• Недостаточно средств на карте\n"
+                f"• Карта заблокирована\n"
+                f"• Истёк срок действия карты\n\n"
+                f"🕐 Время: {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}"
+            )
+        
+        # Отправляем пуш админам о досрочном списании (только creator и developer, без curator)
+        from utils.constants import ADMIN_GROUP_CREATOR, ADMIN_GROUP_DEVELOPER
+        from utils.admin_permissions import can_receive_payment_notifications
+        
+        admin_notification = (
+            f"⚡ <b>Досрочное автопродление</b>\n\n"
+            f"👤 Пользователь: {user_name}\n"
+            f"🆔 Telegram ID: {telegram_id}\n"
+            f"💵 Сумма: {amount}₽\n"
+            f"📅 Дней: {days}\n"
+            f"📊 Статус: {'✅ SUCCESS' if status == 'success' else '⏳ PENDING' if status == 'pending' else '❌ FAILED'}\n"
+            f"🆔 Payment ID: {payment_id or 'N/A'}\n\n"
+            f"👮 Инициатор: {admin_name}\n"
+            f"🕐 Время: {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}"
+        )
+        
+        async with AsyncSessionLocal() as session:
+            query = select(User).where(
+                User.admin_group.in_([ADMIN_GROUP_CREATOR, ADMIN_GROUP_DEVELOPER])
+            )
+            result = await session.execute(query)
+            admin_users = result.scalars().all()
+            
+            for admin in admin_users:
+                if admin.telegram_id != callback.from_user.id and can_receive_payment_notifications(admin):
+                    try:
+                        await callback.bot.send_message(
+                            admin.telegram_id,
+                            admin_notification,
+                            parse_mode="HTML"
+                        )
+                    except Exception as e:
+                        logger.error(f"Ошибка отправки пуша админу {admin.telegram_id}: {e}")
+        
+        # Показываем результат инициатору
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="« Назад к управлению подпиской",
+                callback_data=f"admin_subscription_menu:{telegram_id}"
+            )]
+        ])
+        
+        await callback.message.edit_text(result_text, reply_markup=keyboard, parse_mode="HTML")
+        await callback.answer()
+        
+    except Exception as e:
+        logger.error(f"Ошибка в process_early_charge: {e}", exc_info=True)
+        await callback.answer("❌ Ошибка при списании", show_alert=True)
+
+
+async def get_admin_user(callback: CallbackQuery):
+    """Получает объект админа из callback"""
+    async with AsyncSessionLocal() as session:
+        return await get_user_by_telegram_id(session, callback.from_user.id)
 
 
 @users_router.callback_query(F.data.startswith("admin_loyalty_menu:"))
