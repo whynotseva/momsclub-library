@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect } from 'react'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import { SubscriptionGuard } from '@/components/shared'
 
 export default function ClientWrapper({ children }: { children: ReactNode }) {
@@ -15,10 +16,12 @@ export default function ClientWrapper({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthProvider>
-      <SubscriptionGuard>
-        {children}
-      </SubscriptionGuard>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <SubscriptionGuard>
+          {children}
+        </SubscriptionGuard>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

@@ -6,7 +6,7 @@ import { usePresence, Activity as WsActivity, AdminAction as WsAdminAction } fro
 import { useAdminData } from '@/hooks/useAdminData'
 import { useTheme } from '@/contexts/ThemeContext'
 import { ADMIN_IDS, ADMIN_GROUP_INFO } from '@/lib/constants'
-import { Sun, Moon, BarChart3, BookOpen, FolderOpen, Clock, Users, Bot, Crown, Code, Target } from 'lucide-react'
+import { Sun, Moon } from 'lucide-react'
 import { Category, Material, Activity, AdminAction, AdminUser } from '@/lib/types'
 import { CategoriesTab, HistoryTab, UsersTab, MaterialsTab, MaterialFormModal, CategoryFormModal, StatsTab, UserDetailsModal, BotUserCard, BotUsersSearch, BotStatsTab } from '@/components/admin'
 
@@ -558,7 +558,7 @@ export default function AdminPage() {
                 href="/library"
                 className="px-4 py-2.5 bg-gradient-to-r from-[#C9A882] to-[#B08968] text-white rounded-xl font-medium text-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2"
               >
-                <BookOpen className="w-4 h-4" /> В библиотеку
+                <span>📚</span> В библиотеку
               </a>
             </div>
           </div>
@@ -584,13 +584,11 @@ export default function AdminPage() {
               <div>
                 <p className="text-xs text-[#B08968] font-medium uppercase tracking-wide mb-0.5">Панель администратора</p>
                 <h2 className="text-xl font-bold text-[#5D4E3A] dark:text-[#E5E5E5]">
-                  Привет, {adminUser.first_name || 'Админ'}!
+                  Привет, {adminUser.first_name || 'Админ'}! 👋
                 </h2>
                 {adminUser.admin_group && ADMIN_GROUP_INFO[adminUser.admin_group] && (
-                  <p className="text-sm text-[#8B8279] dark:text-[#B0B0B0] flex items-center gap-1.5 mt-0.5">
-                    {adminUser.admin_group === 'creator' && <Crown className="w-4 h-4 text-amber-500" />}
-                    {adminUser.admin_group === 'developer' && <Code className="w-4 h-4 text-blue-500" />}
-                    {adminUser.admin_group === 'curator' && <Target className="w-4 h-4 text-green-500" />}
+                  <p className="text-sm text-[#8B8279] flex items-center gap-1.5 mt-0.5">
+                    <span>{ADMIN_GROUP_INFO[adminUser.admin_group].emoji}</span>
                     <span>{ADMIN_GROUP_INFO[adminUser.admin_group].name}</span>
                   </p>
                 )}
@@ -602,36 +600,37 @@ export default function AdminPage() {
         {/* Tabs - только на десктопе */}
         <div className="hidden sm:flex gap-2 mb-6 bg-white/60 dark:bg-[#1E1E1E]/60 backdrop-blur-lg rounded-2xl p-2 border border-[#E8D4BA]/20 dark:border-[#3D3D3D] overflow-x-auto">
           {[
-            { id: 'stats', icon: BarChart3, labelFull: 'Статистика' },
-            { id: 'materials', icon: BookOpen, labelFull: 'Материалы' },
-            { id: 'categories', icon: FolderOpen, labelFull: 'Категории' },
-            { id: 'history', icon: Clock, labelFull: 'История' },
-            { id: 'users', icon: Users, labelFull: 'Библиотека' },
-            { id: 'bot_users', icon: Bot, labelFull: 'Бот' }
+            { id: 'stats', label: '📊', labelFull: 'Статистика' },
+            { id: 'materials', label: '📚', labelFull: 'Материалы' },
+            { id: 'categories', label: '📁', labelFull: 'Категории' },
+            { id: 'history', label: '📝', labelFull: 'История' },
+            { id: 'users', label: '👥', labelFull: 'Библиотека' },
+            { id: 'bot_users', label: '🤖', labelFull: 'Бот' }
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex-1 min-w-0 px-4 py-3 rounded-xl font-medium text-sm transition-all whitespace-nowrap flex items-center justify-center gap-2 ${
+              className={`flex-1 min-w-0 px-4 py-3 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-gradient-to-r from-[#C9A882] to-[#B08968] text-white shadow-lg'
                   : 'text-[#8B8279] dark:text-[#B0B0B0] hover:bg-white/50 dark:hover:bg-[#2A2A2A]'
               }`}
             >
-              <tab.icon className="w-4 h-4" />
-              {tab.labelFull}
+              {tab.label} {tab.labelFull}
             </button>
           ))}
         </div>
         
         {/* Мобильный заголовок таба */}
-        <div className="sm:hidden mb-4 flex items-center justify-center gap-2">
-          {activeTab === 'stats' && <><BarChart3 className="w-5 h-5 text-[#B08968]" /><span className="text-lg font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">Статистика</span></>}
-          {activeTab === 'materials' && <><BookOpen className="w-5 h-5 text-[#B08968]" /><span className="text-lg font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">Материалы</span></>}
-          {activeTab === 'categories' && <><FolderOpen className="w-5 h-5 text-[#B08968]" /><span className="text-lg font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">Категории</span></>}
-          {activeTab === 'history' && <><Clock className="w-5 h-5 text-[#B08968]" /><span className="text-lg font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">История</span></>}
-          {activeTab === 'users' && <><Users className="w-5 h-5 text-[#B08968]" /><span className="text-lg font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">Библиотека</span></>}
-          {activeTab === 'bot_users' && <><Bot className="w-5 h-5 text-[#B08968]" /><span className="text-lg font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">Бот</span></>}
+        <div className="sm:hidden mb-4 text-center">
+          <span className="text-lg font-medium text-[#5D4E3A] dark:text-[#E5E5E5]">
+            {activeTab === 'stats' && '📊 Статистика'}
+            {activeTab === 'materials' && '📚 Материалы'}
+            {activeTab === 'categories' && '📁 Категории'}
+            {activeTab === 'history' && '📝 История'}
+            {activeTab === 'users' && '👥 Библиотека'}
+            {activeTab === 'bot_users' && '🤖 Бот'}
+          </span>
         </div>
 
         {/* Stats Tab */}
@@ -741,23 +740,21 @@ export default function AdminPage() {
       >
         <div className="flex justify-around items-center">
           {[
-            { id: 'stats', icon: BarChart3, label: 'Стат' },
-            { id: 'materials', icon: BookOpen, label: 'Матер' },
-            { id: 'categories', icon: FolderOpen, label: 'Кат' },
-            { id: 'history', icon: Clock, label: 'Ист' },
-            { id: 'users', icon: Users, label: 'Библ' },
-            { id: 'bot_users', icon: Bot, label: 'Бот' }
+            { id: 'stats', icon: '📊', label: 'Стат' },
+            { id: 'materials', icon: '📚', label: 'Матер' },
+            { id: 'categories', icon: '📁', label: 'Кат' },
+            { id: 'history', icon: '📝', label: 'Ист' },
+            { id: 'users', icon: '👥', label: 'Библ' },
+            { id: 'bot_users', icon: '🤖', label: 'Бот' }
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
-                activeTab === tab.id 
-                  ? 'text-[#B08968] bg-[#F5E6D3]/50 dark:bg-[#2A2A2A] shadow-inner' 
-                  : 'text-[#8B8279] dark:text-[#707070]'
+              className={`flex flex-col items-center py-1 px-1.5 rounded-xl transition-all ${
+                activeTab === tab.id ? 'text-[#B08968]' : 'text-[#8B8279] dark:text-[#707070]'
               }`}
             >
-              <tab.icon className="w-5 h-5" />
+              <span className="text-xl">{tab.icon}</span>
               {activeTab === tab.id && <span className="text-[10px] font-medium mt-0.5">{tab.label}</span>}
             </button>
           ))}
